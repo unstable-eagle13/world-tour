@@ -434,12 +434,9 @@ function onStateUpdate(prev, s) {
     if (document.getElementById('s-game').classList.contains('on')) {
       renderScoresBar(s);
       updateAnswerChips(s);
-      // Sync drawing
       if (s.drawData && document.getElementById('drawing-preview')) {
-        const prev = document.getElementById('drawing-preview');
-        prev.innerHTML = `<img src="${s.drawData}" style="width:100%;border-radius:var(--r2)">`;
+        document.getElementById('drawing-preview').innerHTML = `<img src="${s.drawData}" style="width:100%;border-radius:var(--r2)">`;
       }
-      // Buzz happened
       if (s.buzzed && s.buzzed !== lastBuzzed) {
         lastBuzzed = s.buzzed;
         handleBuzzDisplay(s.buzzed);
@@ -448,52 +445,63 @@ function onStateUpdate(prev, s) {
     return;
   }
 
-  // PLAYER reactions
+  // ── PLAYER reactions ──
   if (!s.gameStarted) {
-    // Update waiting room
     if (document.getElementById('s-player-wait').classList.contains('on')) {
       const joined = Object.keys(s.joined||{}).filter(k=>k!=='host');
-      document.getElementById('pw-joined-list').textContent = 'En sala: ' + joined.map(k=>`${PD[k]?.emoji} ${PD[k]?.name}`).join('  ·  ');
+      const el = document.getElementById('pw-joined-list');
+      if (el) el.textContent = 'En sala: ' + joined.map(k=>`${PD[k]?.emoji} ${PD[k]?.name}`).join('  ·  ');
     }
     return;
   }
 
-  // Game started — move to game screen
+  // Move to game screen if not there yet
   if (!document.getElementById('s-game').classList.contains('on')) {
     show('s-game');
-    renderScoresBar(s);
   }
 
   renderScoresBar(s);
+  updateRoundBadge(s.roundIndex);
 
-  // Round changed
-  if (s.roundIndex !== lastRoundIndex) {
-    lastRoundIndex = s.roundIndex;
-    lastPhase = s.phase;
-    lastBuzzed = s.buzzed;
-    updateRoundBadge(s.roundIndex);
-    if (s.phase === 'intro') playerShowIntro(s);
-    else playerShowQuestion(s);
-    return;
-  }
+  const roundChanged = s.roundIndex !== lastRoundIndex;
+  const phaseChanged = s.phase !== lastPhase;
+  const buzzChanged  = s.buzzed !== lastBuzzed;
 
-  // Phase changed
-  if (s.phase !== lastPhase) {
-    lastPhase = s.phase;
-    if (s.phase === 'intro') playerShowIntro(s);
-    else if (s.phase === 'question') playerShowQuestion(s);
-    else if (s.phase === 'reveal') playerShowReveal();
-    return;
-  }
+  // Always update tracking vars
+  lastRoundIndex = s.roundIndex;
+  lastPhase      = s.phase;
+  lastBuzzed     = s.buzzed;
 
-  // Buzz changed
-  if (s.buzzed !== lastBuzzed) {
-    lastBuzzed = s.buzzed;
-    if (s.buzzed && s.buzzed !== myKey) {
-      notify(`${PD[s.buzzed]?.emoji} ${PD[s.buzzed]?.name} buzzeó primero!`);
-      const bb = document.getElementById('buzz-button');
-      if (bb) { bb.disabled = true; bb.textContent = `${PD[s.buzzed]?.emoji} BUZZEÓ PRIMERO`; }
+  if (roundChanged || phaseChanged) {
+    if (s.phase === 'intro') {
+      playerShowIntro(s);
+    } else if (s.phase === 'question') {
+      // If currentQ is required but missing, wait — next server push will have it
+      const roundType = ROUNDS[s.roundIndex]?.type;
+      const needsQ = ['hot_takes','wyr','conspiracy','describe','draw','boss'].includes(roundType);
+      if (needsQ && !s.currentQ) return; // wait for next update
+      playerShowQuestion(s);
+    } else if (s.phase === 'reveal') {
+      playerShowReveal();
+    } else if (s.phase === 'end') {
+      playerShowEnd(s);
     }
+    return;
+  }
+
+  // Buzz update during jeopardy
+  if (buzzChanged && s.buzzed && s.buzzed !== myKey) {
+    notify(`${PD[s.buzzed]?.emoji} ${PD[s.buzzed]?.name} buzzeó primero!`);
+    const bb = document.getElementById('buzz-button');
+    if (bb) { bb.disabled = true; bb.textContent = `${PD[s.buzzed]?.emoji} BUZZEÓ PRIMERO`; }
+    return;
+  }
+
+  // currentQ arrived after phase (rare but possible on slow connections)
+  if (s.phase === 'question' && s.currentQ && prev && !prev.currentQ) {
+    const roundType = ROUNDS[s.roundIndex]?.type;
+    const needsQ = ['hot_takes','wyr','conspiracy','describe','draw','boss'].includes(roundType);
+    if (needsQ) playerShowQuestion(s);
     return;
   }
 
@@ -876,7 +884,7 @@ function awardMem(k) {
 
 function hostBoss() {
   const q=FINAL_BOSS_LIST[Math.floor(Math.random()*FINAL_BOSS_LIST.length)];
-  patch({currentQ:q,answers:{}});
+  patch({phase:'question', currentQ:q, answers:{}});
   document.getElementById('game-body').innerHTML=`
     <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade"><div class="boss-header"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">Puntos dobles. Todo puede cambiar. Un error y quedas último.</div></div>
@@ -933,6 +941,22 @@ function playerShowReveal() {
     <div class="display" style="font-size:26px;color:var(--orange)">ESPERANDO RESULTADO</div>
     <p style="font-size:13px;color:var(--muted);margin-top:8px">El host está revelando...</p>
   </div>`;
+}
+
+function playerShowEnd(s) {
+  const sorted = Object.entries(s.scores||{}).sort((a,b)=>b[1]-a[1]);
+  const winner = sorted[0][0];
+  document.getElementById('game-body').innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px;padding:8px 0">
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:72px">${PD[winner].emoji}</div>
+      <div class="display glow-gold" style="font-size:52px;color:var(--gold)">${PD[winner].name.toUpperCase()}</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:4px">GANADOR DEL WORLD TOUR</div>
+    </div>
+    <div class="lb-wrap">
+      ${sorted.map(([k,pts],i)=>`<div class="lb-row r${i+1}"><div class="lb-rank">${['🥇','🥈','🥉'][i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts}</div></div>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('gb-round').textContent = 'FIN';
 }
 
 function playerShowQuestion(s) {
