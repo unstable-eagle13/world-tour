@@ -361,12 +361,41 @@ const FINAL_BOSS_LIST = [
 //   SOCKET + STATE
 // ═══════════════════════════════════════════
 const socket = io();
-let myRole = null, myKey = null, gameState = null;
+// Persist role/key across screen locks using sessionStorage
+let myRole = sessionStorage.getItem('wt_role') || null;
+let myKey  = sessionStorage.getItem('wt_key')  || null;
+let gameState = null;
 let lastRoundIndex = -1, lastPhase = null, lastBuzzed = null;
 
-socket.on('connect', () => { document.getElementById('conn-dot').classList.add('on'); document.getElementById('conn-status').innerHTML='<span class="conn-dot on"></span>Conectado'; });
-socket.on('disconnect', () => { document.getElementById('conn-dot').classList.remove('on'); document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...'; });
-socket.on('state', s => { const prev = gameState; gameState = s; onStateUpdate(prev, s); });
+function saveSession(role, key) {
+  myRole = role; myKey = key || null;
+  if (role) sessionStorage.setItem('wt_role', role); else sessionStorage.removeItem('wt_role');
+  if (key)  sessionStorage.setItem('wt_key', key);  else sessionStorage.removeItem('wt_key');
+}
+
+socket.on('connect', () => {
+  document.getElementById('conn-dot').classList.add('on');
+  document.getElementById('conn-status').innerHTML='<span class="conn-dot on"></span>Conectado';
+});
+socket.on('disconnect', () => {
+  document.getElementById('conn-dot').classList.remove('on');
+  document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...';
+});
+// When server sends state, if we have a saved session and game is running, restore the player view
+socket.on('state', s => {
+  const prev = gameState; gameState = s;
+  // Auto-restore if we had a session and lost it
+  if (myRole && myKey && s.gameStarted && !document.getElementById('s-game').classList.contains('on')
+      && !document.getElementById('s-host').classList.contains('on')) {
+    // Re-register join in state silently
+    if (!s.joined?.[myKey]) {
+      socket.emit('patch', { joined: { ...(s.joined||{}), [myKey]: true } });
+    }
+    show('s-game');
+    lastRoundIndex = -1; lastPhase = null; // force full re-render
+  }
+  onStateUpdate(prev, s);
+});
 
 function patch(data) { socket.emit('patch', data); }
 function setKey(key, value) { socket.emit('set', { key, value }); }
@@ -457,7 +486,7 @@ function onStateUpdate(prev, s) {
 // ═══════════════════════════════════════════
 //   ENTRY FLOW
 // ═══════════════════════════════════════════
-function goHost() { myRole='host'; show('s-host'); if(gameState)updateHostPanel(gameState); }
+function goHost() { saveSession('host', null); show('s-host'); if(gameState)updateHostPanel(gameState); }
 
 function goPlayerSelect() {
   const s=gameState||{}, taken=Object.keys(s.joined||{});
@@ -482,7 +511,7 @@ function pickPlayer(key) {
 
 function confirmPlayerJoin() {
   if (!selectedPlayer) return;
-  myRole = 'player'; myKey = selectedPlayer;
+  saveSession('player', selectedPlayer);
   const s = gameState||{};
   patch({ joined: { ...(s.joined||{}), [myKey]: true } });
   document.getElementById('pw-name-display').textContent = `${PD[myKey].emoji} ${PD[myKey].name}`;
@@ -520,6 +549,7 @@ function hostStartGame() {
 
 function resetGame() {
   if (!confirm('¿Reiniciar el juego?')) return;
+  saveSession(null, null);
   socket.emit('reset'); location.reload();
 }
 
@@ -1306,7 +1336,7 @@ Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
 function getState(){return gameState||{};}
 function notify(msg,dur=3000){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.getElementById('notif-area').appendChild(el);setTimeout(()=>el.remove(),dur);}
-function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el&&idx>=0)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
+function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el&&idx>=0&&idx<ROUNDS.length)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
 function renderScoresBar(s){const el=document.getElementById('gb-scores');if(!el||!s?.scores)return;el.innerHTML=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>`<div class="gbs-item"><span class="gbs-emoji">${PD[k].emoji}</span><span class="gbs-pts">${pts}</span></div>`).join('');}
 function updateAnswerChips(s){const el=document.getElementById('ans-chips');if(!el)return;el.innerHTML=Object.entries(PD).map(([k,p])=>`<div class="as-chip"><div class="as-dot ${s.answers?.[k]?'on':''}"></div>${p.emoji} ${p.name}</div>`).join('');}
 
