@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>WORLD TOUR 🌍</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="/socket.io/socket.io.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -18,13 +18,10 @@
 }
 html,body{height:100%;overflow-x:hidden}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.5}
-
 .screen{display:none;min-height:100vh;flex-direction:column;align-items:center}
 .screen.on{display:flex}
 .fade{animation:fadeUp .35s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.pulse{animation:pulseA 2s infinite}
-@keyframes pulseA{0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,.35)}60%{box-shadow:0 0 0 10px rgba(48,209,88,0)}}
 .dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);animation:dotB 1.2s infinite}
 .dots span:nth-child(2){animation-delay:.2s}
 .dots span:nth-child(3){animation-delay:.4s}
@@ -32,23 +29,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .glow-red{text-shadow:0 0 30px rgba(255,45,85,.5)}
 .glow-gold{text-shadow:0 0 30px rgba(255,214,10,.4)}
 .display{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;line-height:1}
-
 .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px}
-
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;border-radius:var(--r2);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;transition:all .15s;user-select:none}
 .btn:active{transform:scale(.97)}
-.btn-red{background:var(--red);color:#fff}
-.btn-red:hover{background:#ff4d6a}
-.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--border2);background:var(--s3)}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#ff4d6a}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--border2);background:var(--s3)}
 .btn-green{background:var(--green);color:#000}
 .btn-blue{background:var(--blue);color:#fff}
-.btn-block{width:100%}
-.btn-xl{padding:18px 32px;font-size:18px;border-radius:var(--r)}
+.btn-orange{background:var(--orange);color:#000}
+.btn-block{width:100%}.btn-xl{padding:18px 32px;font-size:18px;border-radius:var(--r)}
 .btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
-
 input[type=text],textarea,select{width:100%;padding:12px 15px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .15s}
-input[type=text]:focus,textarea:focus,select:focus{border-color:var(--red)}
+input[type=text]:focus,textarea:focus{border-color:var(--red)}
 textarea{resize:none}
 label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px}
 
@@ -61,7 +53,7 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 .role-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;cursor:pointer;transition:all .2s;text-align:left;width:100%}
 .role-card:hover{border-color:var(--red);background:var(--s2)}
 .role-card .rc-icon{font-size:32px;margin-bottom:8px}
-.role-card .rc-title{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)}
+.role-card .rc-title{font-family:'Bebas Neue',sans-serif;font-size:22px}
 .role-card .rc-desc{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
 
 /* PLAYER SELECT */
@@ -96,8 +88,7 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 .rr-badge.active{background:#2a0a12;color:var(--red)}
 .rr-badge.done{background:#0a1a0a;color:var(--green)}
 .score-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:var(--r2)}
-.sr-emoji{font-size:22px}
-.sr-name{flex:1;font-size:14px;font-weight:500}
+.sr-emoji{font-size:22px}.sr-name{flex:1;font-size:14px;font-weight:500}
 .sr-pts{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--orange)}
 
 /* GAME */
@@ -115,19 +106,18 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 /* HOST BUBBLE */
 .host-bubble{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);border-top-left-radius:4px;padding:14px 18px}
 .hb-label{font-size:10px;color:var(--red);letter-spacing:.15em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
-.hb-text{font-size:14px;line-height:1.6;color:var(--text)}
-.hb-thinking{display:flex;gap:6px;align-items:center;padding:4px 0}
+.hb-text{font-size:14px;line-height:1.6}
 
 /* ROUND INTRO */
 .round-intro{text-align:center;padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
 .ri-num{font-size:12px;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
 .ri-emoji{font-size:64px}
-.ri-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,12vw,72px);color:var(--red);line-height:1;text-align:center}
+.ri-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,68px);color:var(--red);line-height:1;text-align:center}
 .ri-desc{font-size:14px;color:var(--muted);max-width:360px;line-height:1.6}
 
 /* QUESTION */
 .q-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:14px}
-.q-text{font-size:17px;font-weight:500;line-height:1.55;color:var(--text)}
+.q-text{font-size:17px;font-weight:500;line-height:1.55}
 .q-label{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:-4px}
 
 /* OPTIONS */
@@ -162,8 +152,7 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 .pr-name{font-size:14px;font-weight:500}
 .pr-ans{font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pr-pts{font-family:'Bebas Neue',sans-serif;font-size:20px}
-.pts-win{color:var(--green)}
-.pts-lose{color:var(--red)}
+.pts-win{color:var(--green)}.pts-lose{color:var(--red)}
 
 /* JEOPARDY */
 .jep-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -172,50 +161,58 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 .jep-cell:hover:not(.used){border-color:var(--orange);background:var(--s3)}
 .jep-cell.used{opacity:.2;cursor:default}
 .jep-pts{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--orange)}
-.buzz-btn{width:100%;padding:22px;font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:.08em;background:var(--red);color:#fff;border:none;border-radius:var(--r);cursor:pointer;transition:all .1s;user-select:none}
-.buzz-btn:active{transform:scale(.96);background:#cc2244}
-.buzz-btn:disabled{background:var(--s3);color:var(--dim);cursor:default}
+/* Buzz order board */
+.buzz-order-board{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.buzz-order-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border-radius:var(--r2);border:1px solid var(--border)}
+.buzz-order-row.first{border-color:var(--gold);background:#1a1400}
+.buzz-order-row.second{border-color:#888}
+.buzz-order-row.third{border-color:#8b5e3c}
+.buzz-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted);width:28px}
+.buzz-rank.first{color:var(--gold)}
+.buzz-btn-big{width:100%;padding:22px;font-family:'Bebas Neue',sans-serif;font-size:44px;letter-spacing:.08em;background:var(--red);color:#fff;border:none;border-radius:var(--r);cursor:pointer;transition:all .1s;user-select:none}
+.buzz-btn-big:active{transform:scale(.96);background:#cc2244}
+.buzz-btn-big:disabled{background:var(--s3);color:var(--dim);cursor:default}
 
 /* DRAW */
 #draw-canvas{width:100%;background:#fff;border-radius:var(--r2);cursor:crosshair;touch-action:none;display:block}
 .draw-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0}
 .color-dot{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s}
 .color-dot.on{border-color:var(--text);transform:scale(1.25)}
-.size-btn{padding:4px 11px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px}
+.size-btn{padding:4px 11px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);cursor:pointer;font-size:12px}
 .size-btn.on{border-color:var(--red)}
 .erase-btn{padding:4px 11px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px;margin-left:auto}
 
 /* MEMORY */
 .mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .mem-item{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 10px;text-align:center}
-.mem-emoji{font-size:36px}
-.mem-label{font-size:11px;color:var(--muted);margin-top:5px}
+.mem-emoji{font-size:36px}.mem-label{font-size:11px;color:var(--muted);margin-top:5px}
 
 /* FINAL BOSS */
-.boss-header{text-align:center;padding:16px 0 8px}
 .boss-title{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--red);line-height:1}
 .boss-sub{font-size:13px;color:var(--muted);margin-top:4px}
 .boss-question{background:linear-gradient(135deg,#1f0a0a,#0a0a20);border:1px solid var(--red);border-radius:var(--r);padding:20px;font-size:17px;font-weight:500;line-height:1.55}
 
-/* LEADERBOARD */
+/* LEADERBOARD / END */
 .lb-wrap{display:flex;flex-direction:column;gap:10px;width:100%}
 .lb-row{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r)}
 .lb-row.r1{border-color:var(--gold);background:#1a1400}
 .lb-row.r2{border-color:#888;background:#141414}
 .lb-row.r3{border-color:#8b5e3c;background:#120e08}
-.lb-rank{font-size:28px;width:36px}
-.lb-emoji{font-size:28px}
+.lb-rank{font-size:28px;width:36px}.lb-emoji{font-size:28px}
 .lb-name{flex:1;font-size:18px;font-weight:600}
 .lb-score{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--orange)}
 
-.host-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+/* PLANE ANIMATION */
+.plane-scene{text-align:center;padding:20px 0;overflow:hidden;position:relative}
+.plane-emoji{font-size:48px;display:inline-block;animation:flyAround 3s ease-in-out infinite}
+@keyframes flyAround{0%{transform:translateX(-40px) rotate(-5deg)}50%{transform:translateX(40px) rotate(5deg)}100%{transform:translateX(-40px) rotate(-5deg)}}
+.champion-reveal{opacity:0;transform:translateY(20px);transition:all .6s ease}
+.champion-reveal.show{opacity:1;transform:translateY(0)}
 
-/* NOTIFICATION */
+.host-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 #notif-area{position:fixed;top:16px;right:16px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .notif{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;font-size:13px;animation:slideIn .25s ease;max-width:240px}
 @keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
-
-/* CONNECTION INDICATOR */
 .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block;margin-right:6px}
 .conn-dot.on{background:var(--green)}
 </style>
@@ -226,24 +223,11 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 <div id="s-entry" class="screen on">
   <div class="entry-bg"></div>
   <div class="entry-content fade">
-    <div>
-      <div class="logo-mark">WORLD<br>TOUR</div>
-      <div class="logo-sub">El game show más brutal del universo</div>
-    </div>
-    <div id="conn-status" style="font-size:12px;color:var(--muted);text-align:center">
-      <span class="conn-dot" id="conn-dot"></span>Conectando...
-    </div>
+    <div><div class="logo-mark">WORLD<br>TOUR</div><div class="logo-sub">El game show más brutal del universo</div></div>
+    <div id="conn-status" style="font-size:12px;color:var(--muted);text-align:center"><span class="conn-dot" id="conn-dot"></span>Conectando...</div>
     <div style="display:flex;flex-direction:column;gap:12px;width:100%">
-      <div class="role-card" onclick="goHost()">
-        <div class="rc-icon">🎮</div>
-        <div class="rc-title">Soy el Host</div>
-        <div class="rc-desc">Controlas el ritmo del juego desde tu pantalla grande. No juegas, pero sí destruyes a todos.</div>
-      </div>
-      <div class="role-card" onclick="goPlayerSelect()">
-        <div class="rc-icon">🙋</div>
-        <div class="rc-title">Soy Jugador</div>
-        <div class="rc-desc">Felipe, Rave o Burns. Entra y prepárate para el caos total.</div>
-      </div>
+      <div class="role-card" onclick="goHost()"><div class="rc-icon">🎮</div><div class="rc-title">Soy el Host</div><div class="rc-desc">Controlas el ritmo del juego. No juegas, pero sí destruyes a todos.</div></div>
+      <div class="role-card" onclick="goPlayerSelect()"><div class="rc-icon">🙋</div><div class="rc-title">Soy Jugador</div><div class="rc-desc">Felipe, Rave o Burns. Entra y prepárate para el caos.</div></div>
     </div>
     <p style="font-size:11px;color:var(--dim);text-align:center">Todos abren este mismo link</p>
   </div>
@@ -252,14 +236,9 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 <!-- PLAYER SELECT -->
 <div id="s-player-select" class="screen">
   <div class="psel-wrap fade">
-    <div>
-      <div class="display" style="font-size:36px;color:var(--red);margin-bottom:4px">¿QUIÉN ERES?</div>
-      <p style="font-size:13px;color:var(--muted)">Elige tu personaje</p>
-    </div>
+    <div><div class="display" style="font-size:36px;color:var(--red);margin-bottom:4px">¿QUIÉN ERES?</div><p style="font-size:13px;color:var(--muted)">Elige tu personaje</p></div>
     <div style="display:flex;flex-direction:column;gap:10px" id="player-pick-grid"></div>
-    <button class="btn btn-red btn-block btn-xl" onclick="confirmPlayerJoin()" id="btn-join-confirm" disabled>
-      Entrar al juego →
-    </button>
+    <button class="btn btn-red btn-block btn-xl" onclick="confirmPlayerJoin()" id="btn-join-confirm" disabled>Entrar al juego →</button>
     <button class="btn btn-ghost btn-block" onclick="show('s-entry')">← Volver</button>
   </div>
 </div>
@@ -277,27 +256,13 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 <!-- HOST PANEL -->
 <div id="s-host" class="screen">
   <div class="host-panel">
-    <div class="hp-header">
-      <h1>HOST PANEL</h1>
-      <span style="font-size:12px;background:#1a0a0a;color:var(--red);border:1px solid var(--red);padding:3px 10px;border-radius:20px">Solo tú ves esto</span>
-    </div>
+    <div class="hp-header"><h1>HOST PANEL</h1><span style="font-size:12px;background:#1a0a0a;color:var(--red);border:1px solid var(--red);padding:3px 10px;border-radius:20px">Solo tú ves esto</span></div>
     <div class="hp-grid">
-      <div class="card">
-        <div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Jugadores</div>
-        <div id="hp-players" style="display:flex;flex-direction:column;gap:8px"></div>
-      </div>
-      <div class="card">
-        <div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Puntaje</div>
-        <div id="hp-scores" style="display:flex;flex-direction:column;gap:6px"></div>
-      </div>
+      <div class="card"><div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Jugadores</div><div id="hp-players" style="display:flex;flex-direction:column;gap:8px"></div></div>
+      <div class="card"><div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Puntaje</div><div id="hp-scores" style="display:flex;flex-direction:column;gap:6px"></div></div>
     </div>
-    <div class="card" style="margin-bottom:14px">
-      <div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Rondas</div>
-      <div class="rounds-list" id="hp-rounds"></div>
-    </div>
-    <button class="btn btn-red btn-block btn-xl" id="btn-start" onclick="hostStartGame()" disabled>
-      INICIAR JUEGO
-    </button>
+    <div class="card" style="margin-bottom:14px"><div style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Rondas</div><div class="rounds-list" id="hp-rounds"></div></div>
+    <button class="btn btn-red btn-block btn-xl" id="btn-start" onclick="hostStartGame()" disabled>INICIAR JUEGO</button>
     <p id="hp-status" style="text-align:center;font-size:13px;color:var(--muted);margin-top:10px">Esperando jugadores...</p>
     <button class="btn btn-ghost" style="margin-top:12px;font-size:12px" onclick="resetGame()">↺ Reiniciar juego</button>
   </div>
@@ -316,9 +281,9 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 <div id="notif-area"></div>
 
 <script>
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   GAME DATA
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 const PD = {
   felipe:{ name:'Felipe', emoji:'🦖', city:'Toronto', bio:'Juega Magic: The Gathering y cree que es un maestro de estrategia. Fan de dinosaurios, WWII y Rainbow Six Siege. Muy competitivo, odia perder pero lo hace con frecuencia.' },
   rave:  { name:'Rave',   emoji:'⚽', city:'Londres', bio:'Prefiere planes tranquilos y odia el caos. Le gusta el fútbol y los videojuegos "para desconectarse". Básicamente huyendo de su propia existencia.' },
@@ -326,126 +291,107 @@ const PD = {
 };
 
 const ROUNDS = [
-  { id:'mem_warn',   name:'ADVERTENCIA',           emoji:'👁️',  type:'mem_warn',   desc:'El host tiene un anuncio importante. Pongan atención a todo.' },
-  { id:'hot_takes',  name:'HOT TAKES',              emoji:'🌶️',  type:'hot_takes',  desc:'Opiniones absurdas. Votan. El host decide quién tiene razón.' },
-  { id:'wyr',        name:'WOULD YOU RATHER',       emoji:'😈',  type:'wyr',        desc:'Dos opciones horribles. Sin límites. El host los destruye.' },
-  { id:'jeopardy',   name:'JEOPARDY',               emoji:'🔔',  type:'jeopardy',   desc:'Categorías raras. Buzz. Pierden puntos si fallan.' },
-  { id:'conspiracy', name:'CONSPIRACY CORNER',      emoji:'🛸',  type:'conspiracy', desc:'Conspiraciones delirantes. ¿Quién está detrás?' },
-  { id:'describe',   name:'DESCRÍBELO SIN CAGARLO', emoji:'🗣️',  type:'describe',   desc:'Uno describe, los otros adivinan. Sin decir la palabra.' },
-  { id:'draw',       name:'DRAW & DESTROY',         emoji:'🎨',  type:'draw',       desc:'Uno dibuja, todos adivinan. Dibujos sin filtro.' },
-  { id:'memory',     name:'MEMORY MAYHEM',          emoji:'🧠',  type:'memory',     desc:'¿Recuerdan lo que vieron al principio? Spoiler: no.' },
-  { id:'boss',       name:'FINAL BOSS',             emoji:'💀',  type:'boss',       desc:'Muerte súbita. Puntos dobles. El host se vuelve villano.' }
+  { id:'mem_warn',   name:'ADVERTENCIA',           emoji:'👁️', type:'mem_warn',   desc:'El host tiene un anuncio. Pongan atención a TODO.' },
+  { id:'hot_takes',  name:'HOT TAKES',              emoji:'🌶️', type:'hot_takes',  desc:'3 opiniones absurdas. Votan. El host decide quién tiene razón.' },
+  { id:'wyr',        name:'WOULD YOU RATHER',       emoji:'😈', type:'wyr',        desc:'3 opciones horribles. Sin límites. El host los destruye.' },
+  { id:'jeopardy',   name:'JEOPARDY',               emoji:'🔔', type:'jeopardy',   desc:'Categorías raras. Buzz. Orden importa. Pierden puntos si fallan.' },
+  { id:'conspiracy', name:'CONSPIRACY CORNER',      emoji:'🛸', type:'conspiracy', desc:'3 conspiraciones delirantes. ¿Quién está detrás?' },
+  { id:'describe',   name:'DESCRÍBELO SIN CAGARLO', emoji:'🗣️', type:'describe',   desc:'Cada uno describe una vez. Orden aleatorio.' },
+  { id:'draw',       name:'DRAW & DESTROY',         emoji:'🎨', type:'draw',       desc:'Cada uno dibuja una vez. Sin filtro.' },
+  { id:'memory',     name:'MEMORY MAYHEM',          emoji:'🧠', type:'memory',     desc:'¿Recuerdan lo que vieron al principio? Spoiler: no.' },
+  { id:'boss',       name:'FINAL BOSS',             emoji:'💀', type:'boss',       desc:'Muerte súbita. Puntos dobles. El host se vuelve villano.' }
 ];
 
+// 3 hot takes (all used, in order)
 const HOT_TAKES = [
-  { q:'La gente que duerme boca abajo tiene algo que esconder.',correct:'A favor',reason:'El 94% de los asesinos en serie duermen boca abajo. Datos de la Universidad de Nohay, no se puede refutar.' },
-  { q:'Las personas que ponen alarmas en números como 7:13 son psicológicamente inestables.',correct:'A favor',reason:'¿7:13? ¿Por qué ese minuto exacto? Eso es la mente de alguien que necesita control absoluto sobre su caos interno.' },
-  { q:'Pagar más de $6 por un café es señal de que algo salió mal en tu vida.',correct:'A favor',reason:'Un café de $9 no te hace sofisticado. Te hace víctima. El tinto de $0.50 logra exactamente lo mismo: mantenerte vivo otro día.' },
-  { q:'Los que dicen "trabajo para vivir, no vivo para trabajar" son los más aburridos en una fiesta.',correct:'A favor',reason:'Si tu identidad es no tener identidad, ya dijiste todo. Felicitaciones por ser un protector de pantalla humano.' },
-  { q:'La gente que lee libros físicos en público lo hace para que la vean leyendo.',correct:'A favor',reason:'Si lees en silencio en casa, eso es hobbit. Si lees en un café con el libro bien visible y cara pensativa, eso es marketing personal.' },
-  { q:'Dormir más de 9 horas es una señal de debilidad moral.',correct:'En contra',reason:'Dormir 10 horas es el mayor flex de que tu vida está tan bajo control que nada te quita el sueño. Los que duermen poco solo tienen mala gestión del estrés.' },
-  { q:'Las personas que no pueden decidir qué pedir en un restaurante deberían comer en casa.',correct:'A favor',reason:'20 minutos mirando el menú y preguntas "¿qué recomiendas?" — ya perdiste el privilegio de la vida social.' }
+  { q:'La gente que duerme boca abajo tiene algo que esconder.', correct:'A favor', reason:'El 94% de los asesinos en serie duermen boca abajo. Datos de la Universidad de Nohay, irrefutable.' },
+  { q:'Pagar más de $6 por un café es señal de que algo salió mal en tu vida.', correct:'A favor', reason:'Un café de $9 no te hace sofisticado. Te hace víctima. El tinto de $0.50 logra exactamente lo mismo: mantenerte vivo otro día miserable.' },
+  { q:'La gente que lee libros físicos en público lo hace para que la vean leyendo.', correct:'A favor', reason:'Si lees en silencio en casa eso es hobbit. Si lees en un café con cara pensativa y el libro bien visible, eso es marketing personal de bajo presupuesto.' }
 ];
 
+// 3 WYR (all used, in order)
 const WYR_LIST = [
-  { a:'¿Que tu ex vea tus búsquedas de Google de los últimos 3 años?',b:'¿Que tu jefe escuche todo lo que dices de él en privado?' },
-  { a:'¿Comer una cucharada de cabello humano ajeno cada mañana para siempre?',b:'¿Oler a huevo podrido únicamente cuando estás en ascensores llenos?' },
-  { a:'¿Que un loro repita en voz alta tus pensamientos más sucios en el momento más inapropiado?',b:'¿Que tu cara haga la expresión exacta de lo que piensas sin poder controlarlo?' },
-  { a:'¿Tener que bailar reggaetón 30 segundos cada vez que alguien dice tu nombre?',b:'¿Que cada vez que mientes te salga un hilo de saliva en la comisura?' },
-  { a:'¿Nunca más poder usar pantalón? Solo vestidos o faldas, sin importar el contexto.',b:'¿Gritar "¡CON PERMISO!" a máximo volumen cada vez que entras a cualquier cuarto?' },
-  { a:'¿Que tus padres puedan ver tu historial completo de chats?',b:'¿Que tu historial de chats sea publicado anónimamente pero tus amigos sepan que es tuyo?' },
-  { a:'¿Perder todos tus recuerdos de los últimos 5 años?',b:'¿Que todos los que conoces pierdan sus recuerdos de ti?' }
+  { a:'¿Que tu ex vea tus búsquedas de Google de los últimos 3 años?', b:'¿Que tu jefe escuche todo lo que dices de él en privado?' },
+  { a:'¿Que un loro repita en voz alta tus pensamientos más sucios en el momento más inapropiado?', b:'¿Que tu cara haga la expresión exacta de lo que piensas sin poder controlarlo?' },
+  { a:'¿Nunca más poder usar pantalón? Solo vestidos o faldas, sin importar el contexto.', b:'¿Gritar "¡CON PERMISO!" a máximo volumen cada vez que entras a cualquier cuarto?' }
 ];
 
+// 3 conspiracies (all used, in order)
 const CONSPIRACY_LIST = [
-  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974. La evidencia más sólida: nunca se ven palomas bebé.',q:'¿Quién está detrás?',opts:['La CIA y el KGB en alianza secreta','Nixon lo ordenó antes de renunciar','Los fabricantes de migas de pan para controlar la economía','Las palomas sí existen pero están en la Luna'],correct:1,reveal:'CONFIRMADO: Nixon, harto de que lo espiaran a ÉL, decidió espiar a todos primero. Los drones no se reproducen, por eso nunca ves palomas bebé. Hay un video de YouTube con 47 vistas que lo admite todo.' },
-  { setup:'Los semáforos en rojo duran exactamente el tiempo necesario para que pienses en alguien de tu pasado que te hizo daño. No es coincidencia. Es tecnología de 1962.',q:'¿Cuál es el verdadero propósito?',opts:['Hacerte vulnerable para que compres más en el centro comercial cercano','Experimento de Spotify para generarte el mood perfecto','Los semáforos emiten ondas de nostalgia para reducir velocidad','El municipio cobra royalties emocionales por cada trauma generado'],correct:0,reveal:'Los semáforos fueron conectados al sistema de publicidad urbana en 1978. Cada trauma activado equivale a un 34% más de probabilidad de entrar a una tienda. En Bogotá duran 4 minutos porque tienen más traumas que procesar.' },
-  { setup:'IKEA diseña deliberadamente sus muebles difíciles de armar para medir la tolerancia al estrés de la población. Cada mueble es un punto de datos para predecir colapsos sociales.',q:'¿Qué hacen con esa información?',opts:['La venden a gobiernos para saber cuándo subir impuestos','La usan para decidir cuándo lanzar películas de superhéroes','La comparten con parejas a punto de comprometerse como test','La usan para predecir el próximo Mundial y apostar en secreto'],correct:0,reveal:'Cuando el índice de frustración IKEA sube 12%, los gobiernos anuncian reformas impopulares. Colombia lleva 30 años en nivel máximo, de ahí todo lo demás que ha pasado.' }
+  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974. La evidencia más sólida: nunca se ven palomas bebé.', q:'¿Quién está detrás?', opts:['La CIA y el KGB en alianza secreta','Nixon lo ordenó antes de renunciar','Los fabricantes de migas de pan para controlar la economía','Las palomas sí existen pero están en la Luna'], correct:1, reveal:'CONFIRMADO: Nixon, harto de que lo espiaran a ÉL, decidió espiar a todos primero. Los drones no se reproducen, por eso nunca ves palomas bebé. Hay un video de YouTube con 47 vistas que lo admite todo.' },
+  { setup:'Los semáforos en rojo duran exactamente el tiempo para que pienses en alguien de tu pasado que te hizo daño. No es coincidencia. Es tecnología de 1962.', q:'¿Cuál es el verdadero propósito?', opts:['Hacerte vulnerable para que compres más en el centro comercial cercano','Experimento de Spotify para generarte el mood perfecto','Los semáforos emiten ondas de nostalgia para reducir velocidad','El municipio cobra royalties emocionales por cada trauma generado'], correct:0, reveal:'Los semáforos fueron conectados al sistema de publicidad urbana en 1978. Cada trauma activado equivale a un 34% más de probabilidad de entrar a una tienda. En Bogotá los semáforos duran 4 minutos porque tienen más traumas que procesar.' },
+  { setup:'IKEA diseña deliberadamente sus muebles difíciles de armar para medir la tolerancia al estrés. Cada mueble ensamblado es un punto de datos para predecir colapsos sociales.', q:'¿Qué hacen con esa información?', opts:['La venden a gobiernos para saber cuándo subir impuestos','La usan para decidir cuándo lanzar películas de superhéroes','La comparten con parejas a punto de comprometerse como test de compatibilidad','La usan para predecir el próximo Mundial y apostar en secreto'], correct:0, reveal:'Cuando el índice de frustración IKEA sube 12%, los gobiernos anuncian reformas impopulares. Colombia lleva 30 años en nivel máximo de estrés IKEA, de ahí todo lo demás.' }
 ];
 
 const JEOPARDY_DATA = {
   'Ciencia Inútil':[
-    { pts:100,q:'El nombre científico del miedo a las palabras largas que irónicamente tiene 36 letras.',a:'¿Qué es hipopotomonstrosesquipedaliofobia?' },
-    { pts:200,q:'El porcentaje del ADN que comparten los humanos con las bananas.',a:'¿Qué es el 60%?' },
-    { pts:300,q:'Cuántos huesos tiene un tiburón adulto.',a:'¿Qué es cero? (están hechos de cartílago)' }
+    { pts:100, q:'El nombre científico del miedo a las palabras largas que irónicamente tiene 36 letras.', a:'¿Qué es hipopotomonstrosesquipedaliofobia?' },
+    { pts:200, q:'El porcentaje del ADN que comparten los humanos con las bananas.', a:'¿Qué es el 60%?' },
+    { pts:300, q:'Cuántos huesos tiene un tiburón adulto.', a:'¿Qué es cero? (están hechos de cartílago)' }
   ],
   'Historia Perturbadora':[
-    { pts:100,q:'Este presidente de EEUU instaló una pista de bolos en la Casa Blanca.',a:'¿Quién es Nixon?' },
-    { pts:200,q:'En Roma antigua, esta sustancia se usaba como pasta dental Y blanqueador de ropa.',a:'¿Qué es la orina?' },
-    { pts:300,q:'El nombre del último país en abolir la esclavitud oficialmente, en 1981.',a:'¿Qué es Mauritania?' }
+    { pts:100, q:'Este presidente de EEUU instaló una pista de bolos en la Casa Blanca.', a:'¿Quién es Nixon?' },
+    { pts:200, q:'En Roma antigua, esta sustancia se usaba como pasta dental Y blanqueador de ropa.', a:'¿Qué es la orina?' },
+    { pts:300, q:'El nombre del último país en abolir la esclavitud oficialmente, en 1981.', a:'¿Qué es Mauritania?' }
   ],
   'Geografía Absurda':[
-    { pts:100,q:'Este país tiene más pirámides que Egipto.',a:'¿Qué es Sudán?' },
-    { pts:200,q:'Este mar no tiene costas propias — está rodeado completamente por océano.',a:'¿Qué es el Mar de los Sargazos?' },
-    { pts:300,q:'El único país del mundo cuya bandera no es rectangular.',a:'¿Qué es Nepal?' }
+    { pts:100, q:'Este país tiene más pirámides que Egipto.', a:'¿Qué es Sudán?' },
+    { pts:200, q:'Este mar no tiene costas propias — completamente rodeado de océano.', a:'¿Qué es el Mar de los Sargazos?' },
+    { pts:300, q:'El único país del mundo cuya bandera no es rectangular.', a:'¿Qué es Nepal?' }
   ]
 };
 
 const DESCRIBE_WORDS = ['Escarabajo volkswagen del 65','Un hombre llorando en un partido de fútbol','Felipe perdiendo en Magic: The Gathering','Rave planeando algo "eficiente"','Burns explicando el motor de su carro','Un loro repitiendo pensamientos inapropiados','Alguien armando un mueble de IKEA llorando','Un sommelier snob en Bogotá','Jugador de Rainbow Six reportado por sus compañeros','Una paloma que en realidad es un dron del gobierno'];
 const DRAW_WORDS = ['Un pene con sombrero elegante','Transformer en el baño','Dinosaurio jugando Magic the Gathering','Escarabajo volador de guerra','Cerebro de vacaciones en la playa','Paloma espía del gobierno con audífonos','Carro deportivo hecho de queso','Alien viendo fútbol con camiseta del Real Madrid','Mueble de IKEA que se rindió','Felipe ganando algo por accidente'];
-const MEMORY_ITEMS = [{emoji:'🦜',label:'Loro verde'},{emoji:'🚗',label:'Escarabajo rojo'},{emoji:'🌮',label:'Taco gigante'},{emoji:'🎯',label:'Diana azul'},{emoji:'🐊',label:'Cocodrilo'},{emoji:'🎸',label:'Guitarra morada'}];
-const FINAL_BOSS_LIST = [
-  { q:'¿Cuántas palomas se estima que hay en el mundo?',opts:['400 millones','1.2 billones','220 millones','780 millones'],correct:0,roasts:{felipe:'Para alguien obsesionado con estrategia militar, no sabe nada de vigilancia aérea.',rave:'Ni sus cálculos "eficientes" lo salvaron.',burns:'El Escarabajo duró más que tu racha de respuestas correctas.'} },
-  { q:'¿En qué año fue el primer partido de fútbol jugado bajo lluvia documentado oficialmente?',opts:['1872','1891','1863','1905'],correct:0,roasts:{felipe:'Los dinosaurios jugaban fútbol y aún así no sabes esto.',rave:'Un fanático del fútbol que no sabe su propia historia. Vergonzoso.',burns:'El Real Madrid tampoco lo sabe. En eso coinciden perfectamente.'} }
+
+// Pool of memory item sets — one chosen randomly each game
+const MEMORY_POOLS = [
+  [{emoji:'🦜',label:'Loro verde'},{emoji:'🚗',label:'Escarabajo rojo'},{emoji:'🌮',label:'Taco gigante'},{emoji:'🎯',label:'Diana azul'},{emoji:'🐊',label:'Cocodrilo'},{emoji:'🎸',label:'Guitarra morada'}],
+  [{emoji:'🦕',label:'Dinosaurio'},{emoji:'🍕',label:'Pizza'},{emoji:'🎩',label:'Sombrero negro'},{emoji:'🌙',label:'Luna'},{emoji:'🐙',label:'Pulpo'},{emoji:'🔑',label:'Llave dorada'}],
+  [{emoji:'🚀',label:'Cohete'},{emoji:'🍩',label:'Dona rosada'},{emoji:'🦁',label:'León'},{emoji:'⚽',label:'Balón de fútbol'},{emoji:'🎲',label:'Dado'},{emoji:'🌋',label:'Volcán'}],
+  [{emoji:'🦊',label:'Zorro'},{emoji:'🍦',label:'Helado'},{emoji:'🎪',label:'Carpa de circo'},{emoji:'🐋',label:'Ballena'},{emoji:'🔭',label:'Telescopio'},{emoji:'🧲',label:'Imán'}]
 ];
 
-// ══════════════════════════════════════
-//   SOCKET.IO CONNECTION
-// ══════════════════════════════════════
+const FINAL_BOSS_LIST = [
+  { q:'¿Cuántas palomas se estima que hay en el mundo?', opts:['400 millones','1.2 billones','220 millones','780 millones'], correct:0, roasts:{felipe:'Para alguien obsesionado con estrategia militar, no sabe nada de vigilancia aérea.',rave:'Ni sus cálculos "eficientes" lo salvaron.',burns:'El Escarabajo duró más que tu racha de respuestas correctas.'} },
+  { q:'¿En qué año fue el primer partido de fútbol jugado bajo lluvia documentado oficialmente?', opts:['1872','1891','1863','1905'], correct:0, roasts:{felipe:'Los dinosaurios jugaban fútbol y aún así no sabes esto.',rave:'Un fanático del fútbol que no sabe su propia historia. Vergonzoso.',burns:'El Real Madrid tampoco lo sabe. En eso coinciden perfectamente.'} }
+];
+
+// ═══════════════════════════════════════════
+//   SOCKET + STATE
+// ═══════════════════════════════════════════
 const socket = io();
-let myRole = null;
-let myKey = null;
-let gameState = null;
-let lastRoundIndex = -1;
-let lastPhase = null;
-let lastBuzzed = null;
+let myRole = null, myKey = null, gameState = null;
+let lastRoundIndex = -1, lastPhase = null, lastBuzzed = null;
 
-socket.on('connect', () => {
-  document.getElementById('conn-dot').classList.add('on');
-  document.getElementById('conn-status').innerHTML = '<span class="conn-dot on"></span>Conectado';
-});
+socket.on('connect', () => { document.getElementById('conn-dot').classList.add('on'); document.getElementById('conn-status').innerHTML='<span class="conn-dot on"></span>Conectado'; });
+socket.on('disconnect', () => { document.getElementById('conn-dot').classList.remove('on'); document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...'; });
+socket.on('state', s => { const prev = gameState; gameState = s; onStateUpdate(prev, s); });
 
-socket.on('disconnect', () => {
-  document.getElementById('conn-dot').classList.remove('on');
-  document.getElementById('conn-status').innerHTML = '<span class="conn-dot"></span>Desconectado — reconectando...';
-});
+function patch(data) { socket.emit('patch', data); }
+function setKey(key, value) { socket.emit('set', { key, value }); }
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-socket.on('state', (s) => {
-  const prev = gameState;
-  gameState = s;
-  onStateUpdate(prev, s);
-});
-
-function patch(data) {
-  socket.emit('patch', data);
-}
-function setKey(key, value) {
-  socket.emit('set', { key, value });
-}
-
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   STATE REACTIONS
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 function onStateUpdate(prev, s) {
   if (myRole === 'host') {
-    if (document.getElementById('s-host').classList.contains('on')) {
-      updateHostPanel(s);
-    }
+    if (document.getElementById('s-host').classList.contains('on')) updateHostPanel(s);
     if (document.getElementById('s-game').classList.contains('on')) {
       renderScoresBar(s);
       updateAnswerChips(s);
       if (s.drawData && document.getElementById('drawing-preview')) {
         document.getElementById('drawing-preview').innerHTML = `<img src="${s.drawData}" style="width:100%;border-radius:var(--r2)">`;
       }
-      if (s.buzzed && s.buzzed !== lastBuzzed) {
-        lastBuzzed = s.buzzed;
-        handleBuzzDisplay(s.buzzed);
+      if (s.buzzOrder && JSON.stringify(s.buzzOrder) !== JSON.stringify(prev?.buzzOrder)) {
+        renderBuzzBoard(s.buzzOrder);
       }
     }
     return;
   }
 
-  // ── PLAYER reactions ──
+  // PLAYER
   if (!s.gameStarted) {
     if (document.getElementById('s-player-wait').classList.contains('on')) {
       const joined = Object.keys(s.joined||{}).filter(k=>k!=='host');
@@ -455,73 +401,67 @@ function onStateUpdate(prev, s) {
     return;
   }
 
-  // Move to game screen if not there yet
-  if (!document.getElementById('s-game').classList.contains('on')) {
-    show('s-game');
-  }
-
+  if (!document.getElementById('s-game').classList.contains('on')) show('s-game');
   renderScoresBar(s);
   updateRoundBadge(s.roundIndex);
 
   const roundChanged = s.roundIndex !== lastRoundIndex;
   const phaseChanged = s.phase !== lastPhase;
-  const buzzChanged  = s.buzzed !== lastBuzzed;
+  const buzzChanged  = s.buzzOrder?.length !== (prev?.buzzOrder?.length || 0);
 
-  // Always update tracking vars
   lastRoundIndex = s.roundIndex;
   lastPhase      = s.phase;
   lastBuzzed     = s.buzzed;
 
   if (roundChanged || phaseChanged) {
-    if (s.phase === 'intro') {
-      playerShowIntro(s);
-    } else if (s.phase === 'question') {
-      // If currentQ is required but missing, wait — next server push will have it
-      const roundType = ROUNDS[s.roundIndex]?.type;
-      const needsQ = ['hot_takes','wyr','conspiracy','describe','draw','boss'].includes(roundType);
-      if (needsQ && !s.currentQ) return; // wait for next update
-      playerShowQuestion(s);
-    } else if (s.phase === 'reveal') {
-      playerShowReveal();
-    } else if (s.phase === 'end') {
-      playerShowEnd(s);
+    if (s.phase === 'intro') { playerShowIntro(s); return; }
+    if (s.phase === 'question') {
+      const rt = ROUNDS[s.roundIndex]?.type;
+      if (['hot_takes','wyr','conspiracy','boss'].includes(rt) && !s.currentQ) return;
+      if (['describe','draw'].includes(rt) && !s.currentQ) return;
+      playerShowQuestion(s); return;
+    }
+    if (s.phase === 'reveal') { playerShowReveal(); return; }
+    if (s.phase === 'end') { playerShowEnd(s); return; }
+  }
+
+  // currentQ arrived late
+  if (s.phase === 'question' && s.currentQ && prev && !prev.currentQ) {
+    playerShowQuestion(s); return;
+  }
+
+  // Buzz order updated
+  if (buzzChanged) {
+    updateAnswerChips(s);
+    if (s.buzzOrder?.length > 0) {
+      const bb = document.getElementById('buzz-button');
+      if (bb) { bb.disabled = true; bb.textContent = `${PD[s.buzzOrder[0]]?.emoji} buzzeó primero`; }
+      if (s.buzzOrder.includes(myKey)) {
+        const pos = s.buzzOrder.indexOf(myKey) + 1;
+        notify(pos === 1 ? '🥇 ¡Buzzeaste primero!' : `#${pos} en buzzear`);
+      }
     }
     return;
   }
 
-  // Buzz update during jeopardy
-  if (buzzChanged && s.buzzed && s.buzzed !== myKey) {
-    notify(`${PD[s.buzzed]?.emoji} ${PD[s.buzzed]?.name} buzzeó primero!`);
+  // Buzz reset
+  if (s.buzzOrder?.length === 0 && prev?.buzzOrder?.length > 0) {
     const bb = document.getElementById('buzz-button');
-    if (bb) { bb.disabled = true; bb.textContent = `${PD[s.buzzed]?.emoji} BUZZEÓ PRIMERO`; }
-    return;
-  }
-
-  // currentQ arrived after phase (rare but possible on slow connections)
-  if (s.phase === 'question' && s.currentQ && prev && !prev.currentQ) {
-    const roundType = ROUNDS[s.roundIndex]?.type;
-    const needsQ = ['hot_takes','wyr','conspiracy','describe','draw','boss'].includes(roundType);
-    if (needsQ) playerShowQuestion(s);
+    if (bb) { bb.disabled = false; bb.textContent = '¡BUZZ!'; }
     return;
   }
 
   updateAnswerChips(s);
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   ENTRY FLOW
-// ══════════════════════════════════════
-function goHost() {
-  myRole = 'host';
-  show('s-host');
-  if (gameState) updateHostPanel(gameState);
-}
+// ═══════════════════════════════════════════
+function goHost() { myRole='host'; show('s-host'); if(gameState)updateHostPanel(gameState); }
 
 function goPlayerSelect() {
-  const s = gameState || {};
-  const taken = Object.keys(s.joined||{});
-  const grid = document.getElementById('player-pick-grid');
-  grid.innerHTML = Object.entries(PD).map(([key,p]) => {
+  const s=gameState||{}, taken=Object.keys(s.joined||{});
+  document.getElementById('player-pick-grid').innerHTML = Object.entries(PD).map(([key,p]) => {
     const isTaken = taken.includes(key);
     return `<button class="player-pick-btn ${isTaken?'taken':''}" id="ppb-${key}" onclick="pickPlayer('${key}')" ${isTaken?'disabled':''}>
       <div class="ppb-emoji">${p.emoji}</div>
@@ -533,8 +473,7 @@ function goPlayerSelect() {
 
 let selectedPlayer = null;
 function pickPlayer(key) {
-  const s = gameState||{};
-  if (s.joined && s.joined[key]) { notify('Ese jugador ya está conectado'); return; }
+  if (gameState?.joined?.[key]) { notify('Ese jugador ya está conectado'); return; }
   selectedPlayer = key;
   document.querySelectorAll('.player-pick-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('ppb-'+key)?.classList.add('sel');
@@ -543,73 +482,56 @@ function pickPlayer(key) {
 
 function confirmPlayerJoin() {
   if (!selectedPlayer) return;
-  myRole = 'player';
-  myKey = selectedPlayer;
-  const s = gameState || {};
+  myRole = 'player'; myKey = selectedPlayer;
+  const s = gameState||{};
   patch({ joined: { ...(s.joined||{}), [myKey]: true } });
   document.getElementById('pw-name-display').textContent = `${PD[myKey].emoji} ${PD[myKey].name}`;
   show('s-player-wait');
-  // If game already started, go directly to game
   if (s.gameStarted) {
-    show('s-game');
-    renderScoresBar(s);
-    lastRoundIndex = s.roundIndex;
-    lastPhase = s.phase;
-    if (s.phase === 'intro') playerShowIntro(s);
-    else playerShowQuestion(s);
+    show('s-game'); renderScoresBar(s);
+    lastRoundIndex = s.roundIndex; lastPhase = s.phase;
+    if (s.phase==='intro') playerShowIntro(s); else playerShowQuestion(s);
   }
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   HOST PANEL
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 function updateHostPanel(s) {
-  const pEl = document.getElementById('hp-players');
-  if (pEl) pEl.innerHTML = Object.entries(PD).map(([k,p]) => {
-    const on = s.joined && s.joined[k];
-    return `<div class="score-row"><div class="sr-emoji">${p.emoji}</div><div class="sr-name">${p.name} <span style="font-size:11px;color:var(--muted)">${p.city}</span></div><div style="font-size:12px;color:${on?'var(--green)':'var(--dim)'}">${on?'✓ Conectado':'Esperando'}</div></div>`;
-  }).join('');
-  const scEl = document.getElementById('hp-scores');
-  if (scEl && s.scores) scEl.innerHTML = Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>
-    `<div class="score-row"><div class="sr-emoji">${PD[k].emoji}</div><div class="sr-name">${PD[k].name}</div><div class="sr-pts">${pts}</div></div>`
-  ).join('');
-  const rEl = document.getElementById('hp-rounds');
-  if (rEl) rEl.innerHTML = ROUNDS.map((r,i)=>
-    `<div class="round-row ${i===s.roundIndex?'active':i<s.roundIndex?'done':''}">
-      <div class="rr-num">${i+1}</div><div style="font-size:16px">${r.emoji}</div>
-      <div class="rr-name">${r.name}</div>
-      <div class="rr-badge ${i===s.roundIndex?'active':i<s.roundIndex?'done':''}">${i===s.roundIndex?'ACTIVA':i<s.roundIndex?'Hecho':'Pendiente'}</div>
-    </div>`
-  ).join('');
-  const joined = Object.keys(s.joined||{}).filter(k=>k!=='host').length;
-  const btn = document.getElementById('btn-start');
-  if (btn) btn.disabled = joined===0 || s.gameStarted;
-  const st = document.getElementById('hp-status');
-  if (st) st.textContent = s.gameStarted ? `Ronda ${s.roundIndex+1}/${ROUNDS.length} activa — ${joined}/3 jugadores` : `${joined}/3 jugadores conectados`;
+  const pEl=document.getElementById('hp-players');
+  if(pEl) pEl.innerHTML=Object.entries(PD).map(([k,p])=>`<div class="score-row"><div class="sr-emoji">${p.emoji}</div><div class="sr-name">${p.name} <span style="font-size:11px;color:var(--muted)">${p.city}</span></div><div style="font-size:12px;color:${s.joined?.[k]?'var(--green)':'var(--dim)'}">${s.joined?.[k]?'✓ Conectado':'Esperando'}</div></div>`).join('');
+  const scEl=document.getElementById('hp-scores');
+  if(scEl&&s.scores) scEl.innerHTML=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>`<div class="score-row"><div class="sr-emoji">${PD[k].emoji}</div><div class="sr-name">${PD[k].name}</div><div class="sr-pts">${pts}</div></div>`).join('');
+  const rEl=document.getElementById('hp-rounds');
+  if(rEl) rEl.innerHTML=ROUNDS.map((r,i)=>`<div class="round-row ${i===s.roundIndex?'active':i<s.roundIndex?'done':''}"><div class="rr-num">${i+1}</div><div style="font-size:16px">${r.emoji}</div><div class="rr-name">${r.name}</div><div class="rr-badge ${i===s.roundIndex?'active':i<s.roundIndex?'done':''}">${i===s.roundIndex?'ACTIVA':i<s.roundIndex?'Hecho':'Pendiente'}</div></div>`).join('');
+  const joined=Object.keys(s.joined||{}).filter(k=>k!=='host').length;
+  const btn=document.getElementById('btn-start'); if(btn) btn.disabled=joined===0||s.gameStarted;
+  const st=document.getElementById('hp-status'); if(st) st.textContent=s.gameStarted?`Ronda ${s.roundIndex+1}/${ROUNDS.length} — ${joined}/3 jugadores`:`${joined}/3 jugadores conectados`;
 }
 
 function hostStartGame() {
-  patch({ gameStarted:true, roundIndex:0, phase:'intro', scores:{felipe:0,rave:0,burns:0}, answers:{}, buzzed:null, jepUsed:{}, drawData:null });
+  const memItems = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
+  const playerKeys = shuffle(['felipe','rave','burns']);
   show('s-game');
-  renderScoresBar(gameState);
+  patch({ gameStarted:true, roundIndex:0, phase:'intro', scores:{felipe:0,rave:0,burns:0}, answers:{}, buzzed:null, buzzOrder:[], jepUsed:{}, drawData:null, currentQ:null, htIndex:0, wyrIndex:0, ccIndex:0, memItems, playerOrder:playerKeys, descTurn:0, drawTurn:0 });
+  renderScoresBar(gameState||{scores:{felipe:0,rave:0,burns:0}});
   hostRunRound(0);
 }
 
 function resetGame() {
-  if (!confirm('¿Reiniciar el juego? Se borrarán todos los puntajes.')) return;
-  socket.emit('reset');
-  location.reload();
+  if (!confirm('¿Reiniciar el juego?')) return;
+  socket.emit('reset'); location.reload();
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   HOST GAME CONTROL
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 let timerInt = null;
 
 function hostRunRound(idx) {
   if (idx >= ROUNDS.length) { hostEndGame(); return; }
   if (timerInt) clearInterval(timerInt);
-  patch({ roundIndex:idx, phase:'intro', answers:{}, buzzed:null, currentQ:null, drawData:null });
+  patch({ roundIndex:idx, phase:'intro', answers:{}, buzzed:null, buzzOrder:[], currentQ:null, drawData:null });
   updateRoundBadge(idx);
   const r = ROUNDS[idx];
   document.getElementById('game-body').innerHTML = `<div class="round-intro fade">
@@ -622,15 +544,14 @@ function hostRunRound(idx) {
 }
 
 function hostExecuteRound(idx) {
-  patch({ phase:'question' });
   const t = ROUNDS[idx].type;
   if(t==='mem_warn')   hostMemWarn();
   else if(t==='hot_takes')  hostHotTakes();
   else if(t==='wyr')        hostWYR();
   else if(t==='jeopardy')   hostJeopardy();
   else if(t==='conspiracy') hostConspiracy();
-  else if(t==='describe')   hostDescribe();
-  else if(t==='draw')       hostDraw();
+  else if(t==='describe')   hostDescribeRound();
+  else if(t==='draw')       hostDrawRound();
   else if(t==='memory')     hostMemory();
   else if(t==='boss')       hostBoss();
 }
@@ -641,292 +562,468 @@ function nextRound() {
   hostRunRound(next);
 }
 
-// HOST ROUNDS
+// ── MEMORY WARNING ──
 function hostMemWarn() {
-  let t=30;
+  patch({ phase:'question', currentQ:null, answers:{} });
+  const items = gameState.memItems || MEMORY_POOLS[0];
+  let t = 30;
   document.getElementById('game-body').innerHTML = `<div class="q-card fade">
     <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:10px">👁️</div>
     <div class="display" style="font-size:26px;color:var(--red);margin-bottom:8px">PONGAN ATENCIÓN</div>
-    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px">Los siguientes ítems aparecerán durante <strong style="color:var(--orange)">30 segundos</strong>. Memorízalos bien. No diremos por qué.</p></div>
-    <div class="mem-grid">${MEMORY_ITEMS.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px">Memoricen estos 6 ítems. Tienen <strong style="color:var(--orange)">30 segundos</strong>. No diremos por qué.</p></div>
+    <div class="mem-grid">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
-    <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30 segundos</div>
+    <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
   </div>`;
-  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los ítems que tendrán que recordar después. Amenázalos crípticamente y de forma oscura.',()=>addNextBtn());}},1000);
+  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los ítems de memoria. Amenázalos de forma críptica y oscura. Que no sepan qué viene.',()=>addNextBtn());} },1000);
 }
 
+// ── HOT TAKES — 3 rounds ──
 function hostHotTakes() {
-  const q=HOT_TAKES[Math.floor(Math.random()*HOT_TAKES.length)];
-  patch({currentQ:q});
+  const s = gameState;
+  const idx = s.htIndex || 0;
+  if (idx >= HOT_TAKES.length) { addNextBtn(); return; }
+  const q = HOT_TAKES[idx];
+  patch({ phase:'question', currentQ:q, answers:{}, htIndex: idx });
+  const isLast = idx === HOT_TAKES.length - 1;
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label">🌶️ Hot Take</div><div class="q-text">"${q.q}"</div>
-    <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealHotTake()">Revelar veredicto</button></div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label">🌶️ Hot Take ${idx+1} de ${HOT_TAKES.length}</div>
+      <div class="q-text">"${q.q}"</div>
+      <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealHotTake()">Revelar veredicto</button></div>
+    </div>`;
   startTimerBar(20,'t-fill');
-  hostGetAI(`Presenta este hot take dramáticamente: "${q.q}". Haz que duden de todo.`);
+  hostGetAI(`Hot take ${idx+1}: "${q.q}". Preséntalo dramáticamente. Haz que duden de su propia existencia.`);
 }
 
 function hostRevealHotTake() {
   const s=gameState, q=s.currentQ; if(!q)return;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=v.toLowerCase().includes(q.correct.toLowerCase()); if(w)ns[k]+=100; return{k,v,w}; });
-  patch({phase:'reveal',scores:ns});
-  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">VEREDICTO OFICIAL</div><div class="reveal-answer">${q.correct}</div><p style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px">${q.reason}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+100':'0'}</span></div>`).join('')}</div>`;
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=v.toLowerCase().includes(q.correct.toLowerCase()); if(w)ns[k]=(ns[k]||0)+100; return{k,v,w}; });
+  patch({ phase:'reveal', scores:ns });
+  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">VEREDICTO OFICIAL</div><div class="reveal-answer">${q.correct}</div><p style="font-size:13px;line-height:1.6;margin-bottom:12px">${q.reason}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+100':'0'}</span></div>`).join('')}</div>`;
   document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
-  renderScoresBar(gameState);
+  renderScoresBar(getState());
   const ctx=rows.map(({k,v})=>`${PD[k].name} votó "${v}"`).join(', ');
-  hostGetAI(`Veredicto: "${q.correct}". ${ctx}. Destruye a quienes fallaron. Menosprecia a quienes acertaron.`,addNextBtn);
+  const nextIdx = (s.htIndex||0) + 1;
+  const hasMore = nextIdx < HOT_TAKES.length;
+  hostGetAI(`Veredicto: "${q.correct}". ${ctx}. Destruye a quienes fallaron.`, () => {
+    if (hasMore) {
+      addContinueBtn(`→ Hot Take ${nextIdx+1}`, () => {
+        patch({ htIndex: nextIdx, answers:{} });
+        hostHotTakes();
+      });
+    } else {
+      addNextBtn();
+    }
+  });
 }
 
+// ── WYR — 3 rounds ──
 function hostWYR() {
-  const q=WYR_LIST[Math.floor(Math.random()*WYR_LIST.length)];
-  patch({currentQ:q});
+  const s = gameState;
+  const idx = s.wyrIndex || 0;
+  if (idx >= WYR_LIST.length) { addNextBtn(); return; }
+  const q = WYR_LIST[idx];
+  patch({ phase:'question', currentQ:q, answers:{}, wyrIndex: idx });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label" style="color:var(--purple)">😈 Would You Rather</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div class="wyr-opt" style="cursor:default">🅰️ ${q.a}</div>
-      <div class="wyr-divider">— O —</div>
-      <div class="wyr-opt" style="cursor:default">🅱️ ${q.b}</div>
-    </div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealWYR()">Ver elecciones</button></div></div>`;
-  hostGetAI(`Presenta este Would You Rather perturbadoramente: A) "${q.a.substring(0,60)}" vs B) "${q.b.substring(0,60)}". Que sientan el peso moral de sus futuros errores.`);
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label" style="color:var(--purple)">😈 Would You Rather ${idx+1} de ${WYR_LIST.length}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="wyr-opt" style="cursor:default">🅰️ ${q.a}</div>
+        <div class="wyr-divider">— O —</div>
+        <div class="wyr-opt" style="cursor:default">🅱️ ${q.b}</div>
+      </div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealWYR()">Ver elecciones</button></div>
+    </div>`;
+  hostGetAI(`Would You Rather ${idx+1}: A) "${q.a.substring(0,60)}" vs B) "${q.b.substring(0,60)}". Que sientan el peso de sus futuros errores.`);
 }
 
 function hostRevealWYR() {
-  const s=gameState,q=s.currentQ;
+  const s=gameState, q=s.currentQ;
   const ns={...s.scores};
   const rows=Object.entries(s.answers||{}).map(([k,v])=>{ ns[k]=(ns[k]||0)+75; return{k,v}; });
-  patch({phase:'reveal',scores:ns});
+  patch({ phase:'reveal', scores:ns });
   const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">LO QUE ELIGIERON</div>${rows.map(({k,v})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'🅰️ '+q.a.substring(0,45)+'...':'🅱️ '+q.b.substring(0,45)+'...'}</span></div><span class="pr-pts pts-win">+75</span></div>`).join('')}</div>`;
   document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
-  renderScoresBar(gameState);
-  hostGetAI(`${rows.map(({k,v})=>`${PD[k].name} eligió ${v==='A'?'A':'B'}`).join(', ')}. Juzga sus decisiones morales sin piedad usando lo que sabes de cada uno.`,addNextBtn);
+  renderScoresBar(getState());
+  const nextIdx = (s.wyrIndex||0) + 1;
+  const hasMore = nextIdx < WYR_LIST.length;
+  hostGetAI(`${rows.map(({k,v})=>`${PD[k].name} eligió ${v==='A'?'A':'B'}`).join(', ')}. Juzga sus decisiones morales sin piedad.`, () => {
+    if (hasMore) {
+      addContinueBtn(`→ Would You Rather ${nextIdx+1}`, () => {
+        patch({ wyrIndex: nextIdx, answers:{} });
+        hostWYR();
+      });
+    } else {
+      addNextBtn();
+    }
+  });
 }
 
-let jepQ=null;
+// ── JEOPARDY ──
+let jepQ = null;
 function hostJeopardy() {
-  const cats=Object.keys(JEOPARDY_DATA);
-  const s=gameState;
-  const renderGrid=()=>cats.map(cat=>`
+  const cats = Object.keys(JEOPARDY_DATA);
+  const s = gameState;
+  patch({ phase:'question', currentQ:null, answers:{}, buzzOrder:[] });
+  const renderGrid = () => cats.map(cat=>`
     <div class="jep-cat-header">${cat}</div>
-    ${JEOPARDY_DATA[cat].map(item=>{ const key=cat+'_'+item.pts; const used=s.jepUsed&&s.jepUsed[key];
+    ${JEOPARDY_DATA[cat].map(item=>{ const key=cat+'_'+item.pts; const used=s.jepUsed?.[key];
       return `<div class="jep-cell ${used?'used':''}" onclick="hostPickJep('${cat}',${item.pts})" id="jc-${cat.replace(/\s/g,'_')}-${item.pts}"><div class="jep-pts">${item.pts}</div></div>`; }).join('')}`).join('');
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label">🔔 Jeopardy — Elige una casilla</div>
-    <div class="jep-grid" id="jep-grid">${renderGrid()}</div>
-    <div id="jep-q-area"></div></div>`;
-  hostGetAI('Bienvenidos al Jeopardy. Actúa como presentador de concurso corrupto que ya sabe los ganadores. Preguntas raras que nadie sabe.');
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label">🔔 Jeopardy — Elige una casilla</div>
+      <div class="jep-grid" id="jep-grid">${renderGrid()}</div>
+      <div id="jep-q-area"></div>
+    </div>`;
+  hostGetAI('Bienvenidos al Jeopardy. Actúa como presentador corrupto que ya sabe los ganadores.');
 }
 
-function hostPickJep(cat,pts) {
+function hostPickJep(cat, pts) {
   const s=gameState; const key=cat+'_'+pts;
-  if(s.jepUsed&&s.jepUsed[key])return;
-  const item=JEOPARDY_DATA[cat].find(i=>i.pts===pts); if(!item)return;
-  jepQ={...item,cat,key};
-  patch({jepUsed:{...(s.jepUsed||{}),[key]:true},currentQ:jepQ,buzzed:null});
+  if (s.jepUsed?.[key]) return;
+  const item = JEOPARDY_DATA[cat].find(i=>i.pts===pts); if(!item)return;
+  jepQ = {...item, cat, key};
+  patch({ jepUsed:{...(s.jepUsed||{}),[key]:true}, currentQ:jepQ, buzzOrder:[], buzzed:null });
   document.getElementById('jc-'+cat.replace(/\s/g,'_')+'-'+pts)?.classList.add('used');
-  const area=document.getElementById('jep-q-area');
-  if(area) area.innerHTML=`<div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-top:10px">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${cat} — ${pts} pts</div>
-    <div style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:8px">${item.q}</div>
-    <div style="font-size:12px;color:var(--green)">Respuesta: ${item.a}</div></div>
-    <div id="buzz-status" style="margin-top:10px"></div>
+  lastBuzzed = null;
+  const area = document.getElementById('jep-q-area');
+  if (area) area.innerHTML=`
+    <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-top:10px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${cat} — ${pts} pts</div>
+      <div style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:8px">${item.q}</div>
+      <div style="font-size:12px;color:var(--green)">✓ Respuesta: ${item.a}</div>
+    </div>
+    <div id="buzz-board" class="buzz-order-board"></div>
     <div class="host-controls" style="margin-top:8px">
-      <button class="btn btn-green" onclick="judgeJep(true)">✓ Correcto</button>
-      <button class="btn btn-red" onclick="judgeJep(false)">✗ Incorrecto</button>
+      <button class="btn btn-green" onclick="judgeJep(true)">✓ Correcto (+${pts})</button>
+      <button class="btn btn-red" onclick="judgeJep(false)">✗ Incorrecto (-${Math.floor(pts/2)})</button>
+      <button class="btn btn-orange" onclick="resetBuzz()">↺ Resetear buzz</button>
       <button class="btn btn-ghost" onclick="jepDone()">→ Siguiente casilla</button>
     </div>`;
   startTimerVal(15);
-  lastBuzzed = null;
 }
 
-function handleBuzzDisplay(player) {
-  const area=document.getElementById('buzz-status');
-  if(area&&myRole==='host') area.innerHTML=`<div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:12px;text-align:center"><div class="display" style="font-size:24px;color:var(--red)">${PD[player]?.emoji} ${PD[player]?.name} BUZZEÓ!</div></div>`;
+function renderBuzzBoard(order) {
+  const board = document.getElementById('buzz-board'); if(!board)return;
+  if (!order || order.length===0) { board.innerHTML=''; return; }
+  const medals = ['🥇','🥈','🥉'];
+  const classes = ['first','second','third'];
+  board.innerHTML = order.map((k,i)=>`
+    <div class="buzz-order-row ${classes[i]||''}">
+      <div class="buzz-rank ${i===0?'first':''}">${medals[i]||`${i+1}.`}</div>
+      <div style="font-size:22px">${PD[k].emoji}</div>
+      <div style="font-size:16px;font-weight:600">${PD[k].name}</div>
+      <div style="font-size:12px;color:var(--muted);margin-left:auto">${i===0?'Responde primero':i===1?'Si falla, responde segundo':'Si fallan los dos, responde'}</div>
+    </div>`).join('');
+}
+
+function resetBuzz() {
+  patch({ buzzOrder:[], buzzed:null });
+  notify('🔄 Buzz reseteado — pueden volver a buzzear');
 }
 
 function judgeJep(correct) {
-  const s=gameState; const player=s.buzzed; if(!player){notify('Nadie buzzeó aún');return;}
+  const s=gameState; const order=s.buzzOrder||[];
+  const player = order[0]; // first in order gets to answer
+  if (!player) { notify('Nadie ha buzzeado aún'); return; }
   const pts=jepQ?.pts||100; const ns={...s.scores};
-  if(correct){ns[player]=(ns[player]||0)+pts;notify(`✅ ${PD[player].name} +${pts}`);}
-  else{ns[player]=Math.max(0,(ns[player]||0)-Math.floor(pts/2));notify(`❌ ${PD[player].name} -${Math.floor(pts/2)}`);}
-  patch({scores:ns,buzzed:null});
-  renderScoresBar(gameState);
-  hostGetAI(`${PD[player].name} ${correct?'respondió correctamente':'falló miserablemente'} en Jeopardy. Pregunta: "${jepQ?.q}". ${correct?'+'+pts:'-'+Math.floor(pts/2)} puntos. Comenta.`);
+  if (correct) { ns[player]=(ns[player]||0)+pts; notify(`✅ ${PD[player].name} +${pts} pts`); }
+  else { ns[player]=Math.max(0,(ns[player]||0)-Math.floor(pts/2)); notify(`❌ ${PD[player].name} -${Math.floor(pts/2)} pts`); }
+  patch({ scores:ns, buzzOrder:[], buzzed:null });
+  renderScoresBar(getState());
+  hostGetAI(`${PD[player].name} ${correct?'respondió correctamente':'falló miserablemente'} en Jeopardy (${jepQ?.q}). ${correct?'+'+pts:'-'+Math.floor(pts/2)} puntos.`);
 }
 
 function jepDone() {
   const s=gameState; const total=Object.values(JEOPARDY_DATA).reduce((a,c)=>a+c.length,0);
-  if(Object.keys(s.jepUsed||{}).length>=total) addNextBtn();
+  if (Object.keys(s.jepUsed||{}).length>=total) addNextBtn();
+  else notify('Aún hay casillas disponibles');
 }
 
+// ── CONSPIRACY — 3 rounds ──
 function hostConspiracy() {
-  const q=CONSPIRACY_LIST[Math.floor(Math.random()*CONSPIRACY_LIST.length)];
-  patch({currentQ:q});
+  const s = gameState;
+  const idx = s.ccIndex || 0;
+  if (idx >= CONSPIRACY_LIST.length) { addNextBtn(); return; }
+  const q = CONSPIRACY_LIST[idx];
+  patch({ phase:'question', currentQ:q, answers:{}, ccIndex: idx });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label" style="color:var(--purple)">🛸 Conspiracy Corner</div>
-    <div style="background:#100a1f;border:1px solid #3a2060;border-radius:var(--r2);padding:14px;margin-bottom:10px"><p style="font-size:14px;line-height:1.7;color:#d4c4f0">${q.setup}</p></div>
-    <div class="q-text">${q.q}</div>
-    <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealConspiracy()">Revelar la verdad</button></div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label" style="color:var(--purple)">🛸 Conspiracy ${idx+1} de ${CONSPIRACY_LIST.length}</div>
+      <div style="background:#100a1f;border:1px solid #3a2060;border-radius:var(--r2);padding:14px;margin-bottom:10px"><p style="font-size:14px;line-height:1.7;color:#d4c4f0">${q.setup}</p></div>
+      <div class="q-text">${q.q}</div>
+      <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealConspiracy()">Revelar la verdad</button></div>
+    </div>`;
   startTimerBar(25,'t-fill');
-  hostGetAI(`Presenta esta conspiranoia: "${q.setup.substring(0,100)}". Actúa como si ya supieras la respuesta y estuvieras juzgando a los ignorantes.`);
+  hostGetAI(`Conspiracy ${idx+1}: "${q.setup.substring(0,100)}". Actúa como si ya supieras la respuesta y estuvieras juzgando su ignorancia.`);
 }
 
 function hostRevealConspiracy() {
-  const s=gameState,q=s.currentQ;
+  const s=gameState, q=s.currentQ;
   const ns={...s.scores};
   const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=parseInt(v)===q.correct; if(w)ns[k]=(ns[k]||0)+150; return{k,v,w}; });
-  patch({phase:'reveal',scores:ns});
+  patch({ phase:'reveal', scores:ns });
   const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--purple);margin-bottom:6px">🛸 LA VERDAD</div><div class="reveal-answer" style="color:var(--gold);font-size:26px">${q.opts[q.correct]}</div><p style="font-size:13px;line-height:1.6;margin:10px 0">${q.reveal}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${q.opts[parseInt(v)]||'???'}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+150':'0'}</span></div>`).join('')}</div>`;
   document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
-  renderScoresBar(gameState);
-  hostGetAI(`La respuesta era "${q.opts[q.correct]}". ${rows.map(({k,v})=>`${PD[k].name} eligió "${q.opts[parseInt(v)]||'???'}"`).join(', ')}. Comenta su nivel de paranoia e inteligencia.`,addNextBtn);
+  renderScoresBar(getState());
+  const nextIdx = (s.ccIndex||0) + 1;
+  const hasMore = nextIdx < CONSPIRACY_LIST.length;
+  hostGetAI(`La respuesta era "${q.opts[q.correct]}". ${rows.map(({k,v})=>`${PD[k].name}: "${q.opts[parseInt(v)]||'???'}"`).join(', ')}. Juzga su paranoia e inteligencia.`, () => {
+    if (hasMore) {
+      addContinueBtn(`→ Conspiracy ${nextIdx+1}`, () => {
+        patch({ ccIndex: nextIdx, answers:{} });
+        hostConspiracy();
+      });
+    } else {
+      addNextBtn();
+    }
+  });
 }
 
-let descTurn=0;
-function hostDescribe() {
-  const order=['rave','burns','felipe'];
-  const drawer=order[descTurn%3];
-  const word=DESCRIBE_WORDS[Math.floor(Math.random()*DESCRIBE_WORDS.length)];
-  patch({currentQ:{word,drawer},answers:{}});
+// ── DESCRIBE IT — 3 turns, one per player, random order ──
+function hostDescribeRound() {
+  const s = gameState;
+  const turn = s.descTurn || 0;
+  const order = s.playerOrder || ['felipe','rave','burns'];
+  if (turn >= 3) { addNextBtn(); return; }
+  const drawer = order[turn];
+  const word = DESCRIBE_WORDS[Math.floor(Math.random()*DESCRIBE_WORDS.length)];
+  patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{} });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label">🗣️ Describe It — Turno de ${PD[drawer].name}</div>
-    <div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:16px;text-align:center">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">PALABRA:</div>
-      <div class="display" style="font-size:32px;color:var(--orange)">${word}</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px">Solo visible aquí. ${PD[drawer].name} describe de voz.</div>
-    </div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls">
-      <button class="btn btn-green" onclick="hostRevealDescribe(true)">✓ Adivinaron</button>
-      <button class="btn btn-red" onclick="hostRevealDescribe(false)">✗ Tiempo/Nadie</button>
-    </div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label">🗣️ Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} describe</div>
+      <div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:16px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">PALABRA (solo el host ve esto):</div>
+        <div class="display" style="font-size:30px;color:var(--orange)">${word}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">${PD[drawer].name} describe de voz. Los otros dos escriben en sus teléfonos.</div>
+      </div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls">
+        <button class="btn btn-green" onclick="hostRevealDescribe(true)">✓ Alguien adivinó</button>
+        <button class="btn btn-red" onclick="hostRevealDescribe(false)">✗ Tiempo / Nadie</button>
+      </div>
+    </div>`;
   startTimerVal(45);
-  hostGetAI(`${PD[drawer].name} tiene que describir "${word}" sin decirlo. Dado lo que sabemos de ${PD[drawer].name}, sus habilidades descriptivas son cuestionables en el mejor caso.`);
+  hostGetAI(`${PD[drawer].name} tiene que describir "${word}" sin decirlo. Turno ${turn+1} de 3. Comenta sobre sus habilidades descriptivas cuestionables.`);
 }
 
 function hostRevealDescribe(success) {
-  const s=gameState,q=s.currentQ; const ns={...s.scores};
-  if(success){ ns[q.drawer]=(ns[q.drawer]||0)+100; Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k])ns[k]=(ns[k]||0)+75; }); }
-  patch({scores:ns,phase:'reveal'});
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">La palabra era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'}">${success?'✅ ¡Adivinaron!':'❌ Fracaso total'}</div></div>`);
-  renderScoresBar(gameState); descTurn++;
-  hostGetAI(`${success?'Alguien adivinó':'Nadie pudo adivinar'} "${q.word}". ${PD[q.drawer].name} describió. Juzga sus habilidades comunicativas brutalmente.`,addNextBtn);
+  const s=gameState, q=s.currentQ; const ns={...s.scores};
+  if (success) {
+    ns[q.drawer]=(ns[q.drawer]||0)+100;
+    Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k]) ns[k]=(ns[k]||0)+75; });
+  }
+  patch({ scores:ns, phase:'reveal' });
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">La palabra era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};margin-top:4px">${success?'✅ ¡Adivinaron!':'❌ Fracaso total'}</div></div>`);
+  renderScoresBar(getState());
+  const nextTurn = (q.turn||0) + 1;
+  hostGetAI(`${success?'Adivinaron':'Nadie adivinó'} "${q.word}". ${PD[q.drawer].name} describió. Juzga brutalmente.`, () => {
+    if (nextTurn < 3) {
+      addContinueBtn(`→ Siguiente turno (${PD[(gameState.playerOrder||['felipe','rave','burns'])[nextTurn]]?.name})`, () => {
+        patch({ descTurn: nextTurn, answers:{} });
+        hostDescribeRound();
+      });
+    } else {
+      addNextBtn();
+    }
+  });
 }
 
-let drawTurn=0;
-function hostDraw() {
-  const order=['rave','burns','felipe'];
-  const drawer=order[drawTurn%3];
-  const word=DRAW_WORDS[Math.floor(Math.random()*DRAW_WORDS.length)];
-  patch({currentQ:{word,drawer},answers:{},drawData:null});
+// ── DRAW & DESTROY — 3 turns ──
+function hostDrawRound() {
+  const s = gameState;
+  const turn = s.drawTurn || 0;
+  const order = s.playerOrder || ['felipe','rave','burns'];
+  if (turn >= 3) { addNextBtn(); return; }
+  const drawer = order[turn];
+  const word = DRAW_WORDS[Math.floor(Math.random()*DRAW_WORDS.length)];
+  patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{}, drawData:null });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label">🎨 Draw & Destroy — Turno de ${PD[drawer].name}</div>
-    <div style="background:var(--s3);border:1px solid var(--orange);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJAR:</div>
-      <div class="display" style="font-size:28px;color:var(--orange)">${word}</div>
-    </div>
-    <div id="drawing-preview" style="background:#fff;border-radius:var(--r2);min-height:80px;display:flex;align-items:center;justify-content:center"><span style="color:#888;font-size:13px">El dibujo aparece aquí en tiempo real...</span></div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls">
-      <button class="btn btn-green" onclick="hostRevealDraw(true)">✓ Adivinaron</button>
-      <button class="btn btn-red" onclick="hostRevealDraw(false)">✗ Nadie/Tiempo</button>
-    </div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label">🎨 Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} dibuja</div>
+      <div style="background:var(--s3);border:1px solid var(--orange);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJAR (solo host ve):</div>
+        <div class="display" style="font-size:26px;color:var(--orange)">${word}</div>
+      </div>
+      <div id="drawing-preview" style="background:#fff;border-radius:var(--r2);min-height:80px;display:flex;align-items:center;justify-content:center"><span style="color:#888;font-size:13px">El dibujo aparece aquí en tiempo real...</span></div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls">
+        <button class="btn btn-green" onclick="hostRevealDraw(true)">✓ Adivinaron</button>
+        <button class="btn btn-red" onclick="hostRevealDraw(false)">✗ Nadie / Tiempo</button>
+      </div>
+    </div>`;
   startTimerVal(60);
-  hostGetAI(`${PD[drawer].name} tiene que dibujar "${word}". Comenta sobre sus inexistentes habilidades artísticas antes de que empiece.`);
+  hostGetAI(`${PD[drawer].name} tiene que dibujar "${word}". Turno ${turn+1} de 3. Comenta sobre sus habilidades artísticas inexistentes.`);
 }
 
 function hostRevealDraw(success) {
-  const s=gameState,q=s.currentQ; const ns={...s.scores};
-  if(success){ ns[q.drawer]=(ns[q.drawer]||0)+100; Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k])ns[k]=(ns[k]||0)+75; }); }
-  patch({scores:ns,phase:'reveal'});
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">El dibujo era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'}">${success?'✅ ¡Adivinaron!':'❌ Arte incomprendido'}</div></div>`);
-  renderScoresBar(gameState); drawTurn++;
-  hostGetAI(`El dibujo de ${PD[q.drawer].name} era "${q.word}" y ${success?'lo adivinaron':'nadie lo entendió'}. Critica como curador de museo decepcionado.`,addNextBtn);
+  const s=gameState, q=s.currentQ; const ns={...s.scores};
+  if (success) {
+    ns[q.drawer]=(ns[q.drawer]||0)+100;
+    Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k]) ns[k]=(ns[k]||0)+75; });
+  }
+  patch({ scores:ns, phase:'reveal' });
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">El dibujo era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};">${success?'✅ ¡Adivinaron!':'❌ Arte incomprendido'}</div></div>`);
+  renderScoresBar(getState());
+  const nextTurn = (q.turn||0) + 1;
+  hostGetAI(`${PD[q.drawer].name} dibujó "${q.word}" y ${success?'lo adivinaron':'nadie lo entendió'}. Critica el arte como curador decepcionado.`, () => {
+    if (nextTurn < 3) {
+      addContinueBtn(`→ Siguiente turno (${PD[(gameState.playerOrder||['felipe','rave','burns'])[nextTurn]]?.name})`, () => {
+        patch({ drawTurn: nextTurn, answers:{}, drawData:null });
+        hostDrawRound();
+      });
+    } else {
+      addNextBtn();
+    }
+  });
 }
 
+// ── MEMORY MAYHEM ──
 function hostMemory() {
-  patch({answers:{}});
+  patch({ phase:'question', currentQ:null, answers:{} });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="q-label">🧠 Memory Mayhem</div>
-    <div class="q-text">¿Recuerdan los 6 ítems del principio? Escríbanlos en sus teléfonos.</div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealMemory()">Revelar y juzgar</button></div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div class="q-label">🧠 Memory Mayhem</div>
+      <div class="q-text">¿Recuerdan los 6 ítems del principio? Escríbanlos en sus teléfonos.</div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealMemory()">Revelar y juzgar</button></div>
+    </div>`;
   hostGetAI('Es la ronda de memoria. Preséntalo como el momento del juicio final. Que recen.');
 }
 
 function hostRevealMemory() {
-  const s=gameState; patch({phase:'reveal'});
-  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">Los ítems eran:</div>
-    <div class="mem-grid" style="margin-bottom:14px">${MEMORY_ITEMS.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">El host otorga puntos:</div>
+  const s=gameState;
+  const items = s.memItems || MEMORY_POOLS[0];
+  patch({ phase:'reveal' });
+  const h=`<div class="reveal-card fade">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Los ítems eran:</div>
+    <div class="mem-grid" style="margin-bottom:14px">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Otorga puntos manualmente:</div>
     ${Object.entries(s.answers||{}).map(([k,v])=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><button onclick="awardMem('${k}')" class="btn btn-green" style="padding:4px 12px;font-size:12px">+200</button></div>`).join('')}
   </div>`;
   document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
-  hostGetAI(`Ronda de memoria. Ítems: ${MEMORY_ITEMS.map(m=>m.label).join(', ')}. ${Object.entries(s.answers||{}).map(([k,v])=>`${PD[k].name}: "${v.substring(0,50)}"`).join('; ')}. Juzga sus miserables memorias de pez dorado.`);
+  hostGetAI(`Memory Mayhem. Ítems: ${items.map(m=>m.label).join(', ')}. Respuestas: ${Object.entries(s.answers||{}).map(([k,v])=>`${PD[k].name}: "${v.substring(0,40)}"`).join('; ')}. Juzga sus memorias de pez dorado.`);
 }
 
 function awardMem(k) {
-  const s=gameState; const ns={...s.scores}; ns[k]=(ns[k]||0)+200;
-  patch({scores:ns}); renderScoresBar(gameState); notify(`${PD[k].name} +200 pts!`); addNextBtn();
+  const s=getState(); const ns={...s.scores}; ns[k]=(ns[k]||0)+200;
+  patch({ scores:ns }); renderScoresBar(getState()); notify(`${PD[k].name} +200 pts!`);
+  addNextBtn();
 }
 
+// ── FINAL BOSS ──
 function hostBoss() {
   const q=FINAL_BOSS_LIST[Math.floor(Math.random()*FINAL_BOSS_LIST.length)];
-  patch({phase:'question', currentQ:q, answers:{}});
+  patch({ phase:'question', currentQ:q, answers:{} });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-    <div class="q-card fade"><div class="boss-header"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">Puntos dobles. Todo puede cambiar. Un error y quedas último.</div></div>
-    <div class="boss-question">${q.q}</div>
-    <div class="timer-bar"><div class="timer-fill urgent" id="t-fill" style="width:100%"></div></div>
-    <div class="ans-status" id="ans-chips"></div>
-    <div class="host-controls"><button class="btn btn-red" onclick="hostRevealBoss()">REVELAR Y TERMINAR</button></div></div>`;
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="q-card fade">
+      <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertan. -100 si fallan. Puntos dobles.</div></div>
+      <div class="boss-question">${q.q}</div>
+      <div class="timer-bar"><div class="timer-fill urgent" id="t-fill" style="width:100%"></div></div>
+      <div class="ans-status" id="ans-chips"></div>
+      <div class="host-controls"><button class="btn btn-red" onclick="hostRevealBoss()">REVELAR Y TERMINAR</button></div>
+    </div>`;
   startTimerBar(15,'t-fill');
-  hostGetAI('Es el FINAL BOSS. Todo está en juego. Actúa como villano de película que ya sabe el resultado final. Ponles el peso del mundo encima.');
+  hostGetAI('Es el FINAL BOSS. Todo está en juego. Actúa como el villano definitivo que ya sabe el resultado. Ponles el peso del mundo encima.');
 }
 
 function hostRevealBoss() {
-  const s=gameState,q=s.currentQ;
+  const s=gameState, q=s.currentQ;
   const ns={...s.scores};
   const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=parseInt(v)===q.correct; const pts=w?300:-100; ns[k]=Math.max(0,(ns[k]||0)+pts); return{k,v,w,pts}; });
-  patch({scores:ns,phase:'reveal'});
+  patch({ scores:ns, phase:'reveal' });
   document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--red);margin-bottom:6px">RESPUESTA FINAL</div><div class="reveal-answer glow-gold">${q.opts[q.correct]}</div>${rows.map(({k,v,w,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><div><div class="pr-name">${PD[k].name}</div><div style="font-size:11px;color:var(--muted)">${q.roasts?.[k]||''}</div></div></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+300':'-100'}</span></div>`).join('')}</div>`);
-  renderScoresBar(gameState);
-  setTimeout(()=>hostEndGame(),4500);
+  renderScoresBar(getState());
+  setTimeout(()=>hostEndGame(), 4000);
 }
 
+// ── END GAME — reveal worst to best, plane animation ──
 function hostEndGame() {
-  const s=gameState;
-  patch({phase:'end'});
-  const sorted=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]);
-  const winner=sorted[0][0]; const loser=sorted[2][0];
-  document.getElementById('game-body').innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px;padding:8px 0">
-    <div style="text-align:center;padding:20px 0"><div style="font-size:72px">${PD[winner].emoji}</div>
-    <div class="display glow-gold" style="font-size:52px;color:var(--gold)">${PD[winner].name.toUpperCase()}</div>
-    <div style="font-size:14px;color:var(--muted);margin-top:4px">GANADOR DEL WORLD TOUR</div></div>
-    <div class="lb-wrap">${sorted.map(([k,pts],i)=>`<div class="lb-row r${i+1} fade"><div class="lb-rank">${['🥇','🥈','🥉'][i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts}</div></div>`).join('')}</div>
-    <div id="ai-bubble" class="host-bubble"><div class="hb-label">🎙️ EL HOST</div><div class="hb-thinking"><span class="dots"><span></span><span></span><span></span></span></div></div>
-  </div>`;
-  document.getElementById('gb-round').textContent='FIN';
-  hostGetAI(`El juego terminó. ${PD[winner].name} ganó con ${sorted[0][1]} puntos. ${PD[loser].name} quedó último con ${sorted[2][1]} puntos. Da el veredicto final más épico y brutal. Destruye al último. Usa sus características personales.`);
+  const s = getState();
+  patch({ phase:'end', scores: s.scores });
+  const sorted = Object.entries(s.scores).sort((a,b)=>a[1]-b[1]); // worst first
+  const winner = sorted[sorted.length-1][0];
+  const loser  = sorted[0][0];
+
+  document.getElementById('game-body').innerHTML=`
+    <div class="fade" style="display:flex;flex-direction:column;gap:16px;padding:8px 0">
+      <div style="text-align:center;padding:16px 0">
+        <div class="display" style="font-size:28px;color:var(--muted);margin-bottom:12px">RESULTADOS FINALES</div>
+      </div>
+
+      <!-- Reveal worst to best with delay -->
+      <div class="lb-wrap" id="lb-reveal"></div>
+
+      <!-- Plane + champion -->
+      <div class="plane-scene" id="plane-scene" style="display:none;margin-top:8px">
+        <div style="font-size:14px;color:var(--muted);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase">Campeón Supremo</div>
+        <div class="plane-emoji">✈️</div>
+        <div style="font-size:13px;color:var(--muted);margin:6px 0 12px">dando la vuelta al mundo...</div>
+        <div class="champion-reveal" id="champ-reveal">
+          <div style="font-size:64px">${PD[winner].emoji}</div>
+          <div class="display glow-gold" style="font-size:clamp(36px,10vw,64px);color:var(--gold)">${PD[winner].name.toUpperCase()}</div>
+          <div style="font-size:15px;color:var(--muted);margin-top:4px">CAMPEÓN SUPREMO DEL WORLD TOUR 🌍</div>
+        </div>
+      </div>
+
+      <div id="ai-end-bubble" class="host-bubble" style="display:none">
+        <div class="hb-label">🎙️ EL HOST</div>
+        <div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div>
+      </div>
+    </div>`;
+
+  document.getElementById('gb-round').textContent = 'FIN';
+
+  // Reveal positions one by one, worst → best, with delay
+  const lbEl = document.getElementById('lb-reveal');
+  const medals = ['🥉','🥈','🥇']; // worst=bronze, best=gold
+  const rowClasses = ['r3','r2','r1'];
+  sorted.forEach(([k,pts], i) => {
+    setTimeout(() => {
+      const row = document.createElement('div');
+      row.className = `lb-row ${rowClasses[i]} fade`;
+      row.innerHTML = `<div class="lb-rank">${medals[i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts} pts</div>`;
+      lbEl.appendChild(row);
+    }, i * 1200);
+  });
+
+  // Show plane + champion after all revealed
+  setTimeout(() => {
+    const ps = document.getElementById('plane-scene');
+    if (ps) ps.style.display = 'block';
+    setTimeout(() => {
+      const cr = document.getElementById('champ-reveal');
+      if (cr) cr.classList.add('show');
+    }, 1500);
+    // Show AI bubble
+    setTimeout(() => {
+      const ab = document.getElementById('ai-end-bubble');
+      if (ab) ab.style.display = 'block';
+      hostGetAI(`El juego terminó. ${PD[winner].name} ganó con ${s.scores[winner]} puntos — el campeón supremo del World Tour. ${PD[loser].name} quedó último con ${s.scores[loser]} puntos. Da el discurso de cierre más épico y brutal. Destruye al perdedor. Coronar al ganador. Usa todo lo que sabes de cada uno.`);
+    }, 2500);
+  }, sorted.length * 1200 + 500);
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   PLAYER VIEWS
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 function playerShowIntro(s) {
-  const r=ROUNDS[s.roundIndex];
+  const r = ROUNDS[s.roundIndex];
   document.getElementById('game-body').innerHTML=`<div class="round-intro fade">
     <div class="ri-num">RONDA ${s.roundIndex+1} DE ${ROUNDS.length}</div>
     <div class="ri-emoji">${r.emoji}</div><div class="ri-name">${r.name}</div><div class="ri-desc">${r.desc}</div>
@@ -944,23 +1041,26 @@ function playerShowReveal() {
 }
 
 function playerShowEnd(s) {
-  const sorted = Object.entries(s.scores||{}).sort((a,b)=>b[1]-a[1]);
-  const winner = sorted[0][0];
+  const sorted = Object.entries(s.scores||{}).sort((a,b)=>a[1]-b[1]);
+  const winner = sorted[sorted.length-1][0];
+  const medals = ['🥉','🥈','🥇'];
+  const rowClasses = ['r3','r2','r1'];
   document.getElementById('game-body').innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px;padding:8px 0">
-    <div style="text-align:center;padding:20px 0">
-      <div style="font-size:72px">${PD[winner].emoji}</div>
-      <div class="display glow-gold" style="font-size:52px;color:var(--gold)">${PD[winner].name.toUpperCase()}</div>
-      <div style="font-size:14px;color:var(--muted);margin-top:4px">GANADOR DEL WORLD TOUR</div>
-    </div>
-    <div class="lb-wrap">
-      ${sorted.map(([k,pts],i)=>`<div class="lb-row r${i+1}"><div class="lb-rank">${['🥇','🥈','🥉'][i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts}</div></div>`).join('')}
+    <div style="text-align:center;padding:16px 0"><div class="display" style="font-size:24px;color:var(--muted)">RESULTADOS FINALES</div></div>
+    <div class="lb-wrap">${sorted.map(([k,pts],i)=>`<div class="lb-row ${rowClasses[i]}"><div class="lb-rank">${medals[i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts} pts</div></div>`).join('')}</div>
+    <div class="plane-scene">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em">Campeón Supremo</div>
+      <div class="plane-emoji">✈️</div>
+      <div style="font-size:64px;margin-top:8px">${PD[winner].emoji}</div>
+      <div class="display glow-gold" style="font-size:clamp(32px,8vw,56px);color:var(--gold);margin-top:4px">${PD[winner].name.toUpperCase()}</div>
+      <div style="font-size:14px;color:var(--muted);margin-top:6px">CAMPEÓN SUPREMO DEL WORLD TOUR 🌍</div>
     </div>
   </div>`;
   document.getElementById('gb-round').textContent = 'FIN';
 }
 
 function playerShowQuestion(s) {
-  const t=ROUNDS[s.roundIndex]?.type;
+  const t = ROUNDS[s.roundIndex]?.type;
   if(t==='mem_warn')   playerMemWarn(s);
   else if(t==='hot_takes')  playerHotTakes(s);
   else if(t==='wyr')        playerWYR(s);
@@ -973,11 +1073,12 @@ function playerShowQuestion(s) {
 }
 
 function playerMemWarn(s) {
+  const items = s.memItems || MEMORY_POOLS[0];
   let t=30;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:10px">👁️</div>
-    <div class="display" style="font-size:22px;color:var(--red);margin-bottom:8px">MEMORIZA ESTO</div></div>
-    <div class="mem-grid">${MEMORY_ITEMS.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
+    <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:8px">👁️</div>
+    <div class="display" style="font-size:20px;color:var(--red);margin-bottom:6px">MEMORIZA ESTO</div></div>
+    <div class="mem-grid">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
     <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
   </div>`;
@@ -985,20 +1086,23 @@ function playerMemWarn(s) {
 }
 
 function playerHotTakes(s) {
-  if(s.answers?.[myKey]){playerShowReveal();return;}
+  if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
+  const idx = s.htIndex||0;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="q-label">🌶️ Hot Take</div><div class="q-text">"${q.q}"</div>
+    <div class="q-label">🌶️ Hot Take ${idx+1} de ${HOT_TAKES.length}</div>
+    <div class="q-text">"${q.q}"</div>
     <div class="opts-2"><button class="opt" onclick="playerAnswer('A favor')">✅ A favor</button><button class="opt" onclick="playerAnswer('En contra')">❌ En contra</button></div>
     <div class="ans-status" id="ans-chips"></div></div>`;
   updateAnswerChips(s);
 }
 
 function playerWYR(s) {
-  if(s.answers?.[myKey]){playerShowReveal();return;}
+  if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
+  const idx = s.wyrIndex||0;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="q-label" style="color:var(--purple)">😈 Would You Rather</div>
+    <div class="q-label" style="color:var(--purple)">😈 Would You Rather ${idx+1} de ${WYR_LIST.length}</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="wyr-opt" onclick="playerAnswer('A')">🅰️ ${q.a}</button>
       <div class="wyr-divider">— O —</div>
@@ -1013,26 +1117,36 @@ function playerJeopardy(s) {
     document.getElementById('game-body').innerHTML=`<div class="q-card fade" style="text-align:center;padding:28px 20px"><div style="font-size:40px;margin-bottom:10px">🔔</div><div class="display" style="font-size:26px;color:var(--orange)">JEOPARDY</div><p style="font-size:14px;color:var(--muted);margin-top:8px">El host elige una pregunta...</p></div>`;
     return;
   }
-  const buzzed=s.buzzed;
+  const order = s.buzzOrder||[];
+  const myPos = order.indexOf(myKey);
+  const alreadyBuzzed = myPos >= 0;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
     <div class="q-label">🔔 ${q.cat} — ${q.pts} pts</div>
     <div class="q-text">${q.q}</div>
-    <button class="buzz-btn" id="buzz-button" onclick="playerBuzz()" ${buzzed?'disabled':''}>${buzzed?`${PD[buzzed]?.emoji} BUZZEÓ PRIMERO`:'¡BUZZ!'}</button>
+    <button class="buzz-btn-big" id="buzz-button" onclick="playerBuzz()" ${alreadyBuzzed?'disabled':''}>
+      ${alreadyBuzzed ? `#${myPos+1} en buzzear` : '¡BUZZ!'}
+    </button>
+    ${order.length>0?`<div style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">Orden: ${order.map((k,i)=>`${i+1}. ${PD[k]?.emoji}${PD[k]?.name}`).join(' → ')}</div>`:''}
     <div class="ans-status" id="ans-chips"></div></div>`;
 }
 
 function playerBuzz() {
-  if(gameState.buzzed)return;
-  setKey('buzzed',myKey);
-  const bb=document.getElementById('buzz-button'); if(bb){bb.disabled=true;bb.textContent='¡BUZZEASTE!';}
-  notify(`${PD[myKey].emoji} ¡Buzzeaste!`);
+  const s=gameState;
+  const order=s.buzzOrder||[];
+  if(order.includes(myKey))return;
+  const newOrder=[...order, myKey];
+  setKey('buzzOrder', newOrder);
+  const btn=document.getElementById('buzz-button');
+  if(btn){btn.disabled=true;btn.textContent=`#${newOrder.length} en buzzear`;}
+  notify(`${PD[myKey].emoji} ¡Buzzeaste en #${newOrder.length}!`);
 }
 
 function playerConspiracy(s) {
-  if(s.answers?.[myKey]){playerShowReveal();return;}
+  if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
+  const idx = s.ccIndex||0;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="q-label" style="color:var(--purple)">🛸 Conspiracy Corner</div>
+    <div class="q-label" style="color:var(--purple)">🛸 Conspiracy ${idx+1} de ${CONSPIRACY_LIST.length}</div>
     <div style="background:#100a1f;border:1px solid #3a2060;border-radius:var(--r2);padding:12px;margin-bottom:10px"><p style="font-size:13px;line-height:1.6;color:#d4c4f0">${q.setup}</p></div>
     <div class="q-text">${q.q}</div>
     <div class="opts-col">${q.opts.map((o,i)=>`<button class="opt" onclick="playerAnswer('${i}')">${String.fromCharCode(65+i)}) ${o}</button>`).join('')}</div>
@@ -1042,21 +1156,22 @@ function playerConspiracy(s) {
 
 function playerDescribe(s) {
   const q=s.currentQ; if(!q)return;
-  const isMe=q.drawer===myKey;
+  const isMe = q.drawer===myKey;
   if(isMe){
     document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🗣️ Tu turno de describir</div>
+      <div class="q-label">🗣️ Tu turno de describir (${(q.turn||0)+1}/3)</div>
       <div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:16px;text-align:center">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px">DESCRIBE ESTO SIN DECIRLO:</div>
-        <div class="display" style="font-size:30px;color:var(--orange)">${q.word}</div>
+        <div class="display" style="font-size:28px;color:var(--orange)">${q.word}</div>
       </div>
-      <p style="font-size:13px;color:var(--muted);text-align:center">Descríbelo de voz. Los otros escriben sus respuestas.</p></div>`;
+      <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:4px">Los otros dos escriben en sus teléfonos. Tú hablas.</p>
+    </div>`;
   } else {
-    if(s.answers?.[myKey]){playerShowReveal();return;}
+    if(s.answers?.[myKey]){ playerShowReveal(); return; }
     document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🗣️ ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} describe algo...</div>
+      <div class="q-label">🗣️ ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} describe (${(q.turn||0)+1}/3)</div>
       <div class="q-text">Escucha y escribe tu respuesta</div>
-      <input type="text" id="desc-input" placeholder="¿Qué es?" />
+      <input type="text" id="desc-input" placeholder="¿Qué está describiendo?" />
       <button class="btn btn-blue btn-block" onclick="playerAnswerText('desc-input')" style="margin-top:8px">Enviar →</button>
       <div class="ans-status" id="ans-chips"></div></div>`;
     updateAnswerChips(s);
@@ -1065,15 +1180,15 @@ function playerDescribe(s) {
 
 function playerDraw(s) {
   const q=s.currentQ; if(!q)return;
-  const isMe=q.drawer===myKey;
+  const isMe = q.drawer===myKey;
   if(isMe){
     document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🎨 Tu turno de dibujar</div>
+      <div class="q-label">🎨 Tu turno de dibujar (${(q.turn||0)+1}/3)</div>
       <div style="background:var(--s3);border:1px solid var(--orange);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJA:</div>
-        <div class="display" style="font-size:26px;color:var(--orange)">${q.word}</div>
+        <div class="display" style="font-size:24px;color:var(--orange)">${q.word}</div>
       </div>
-      <canvas id="draw-canvas" width="500" height="280"></canvas>
+      <canvas id="draw-canvas" width="500" height="260"></canvas>
       <div class="draw-toolbar">
         ${['#000000','#ff2d55','#0a84ff','#30d158','#ff9f0a','#bf5af2','#ffffff'].map((c,i)=>`<div class="color-dot ${i===0?'on':''}" style="background:${c};${c==='#ffffff'?'border-color:#555':''}" onclick="setColor('${c}',this)"></div>`).join('')}
         <button class="size-btn on" onclick="setSize(4,this)">S</button>
@@ -1083,10 +1198,10 @@ function playerDraw(s) {
       </div></div>`;
     initDraw();
   } else {
-    if(s.answers?.[myKey]){playerShowReveal();return;}
+    if(s.answers?.[myKey]){ playerShowReveal(); return; }
     document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🎨 ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} está dibujando</div>
-      <div class="q-text">Miren la pantalla del host. ¿Qué está dibujando?</div>
+      <div class="q-label">🎨 ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} dibuja (${(q.turn||0)+1}/3)</div>
+      <div class="q-text">Mira la pantalla del host. ¿Qué está dibujando?</div>
       <input type="text" id="draw-guess-input" placeholder="Tu respuesta..." />
       <button class="btn btn-blue btn-block" onclick="playerAnswerText('draw-guess-input')" style="margin-top:8px">Enviar →</button>
       <div class="ans-status" id="ans-chips"></div></div>`;
@@ -1095,7 +1210,7 @@ function playerDraw(s) {
 }
 
 function playerMemory(s) {
-  if(s.answers?.[myKey]){playerShowReveal();return;}
+  if(s.answers?.[myKey]){ playerShowReveal(); return; }
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
     <div class="q-label">🧠 Memory Mayhem</div>
     <div class="q-text">¿Recuerdas los 6 ítems del principio? Escríbelos todos.</div>
@@ -1106,42 +1221,41 @@ function playerMemory(s) {
 }
 
 function playerBoss(s) {
-  if(s.answers?.[myKey]){playerShowReveal();return;}
+  if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="boss-header"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertas. -100 si fallas.</div></div>
+    <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertas. -100 si fallas.</div></div>
     <div class="boss-question">${q.q}</div>
     <div class="opts-2">${q.opts.map((o,i)=>`<button class="opt" onclick="playerAnswer('${i}')">${o}</button>`).join('')}</div>
     <div class="ans-status" id="ans-chips"></div></div>`;
   updateAnswerChips(s);
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   PLAYER ANSWER
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 function playerAnswer(val) {
   if(gameState.answers?.[myKey])return;
-  const ns={...(gameState.answers||{}),[myKey]:val};
-  setKey('answers',ns);
+  setKey('answers', {...(gameState.answers||{}), [myKey]: val});
   document.querySelectorAll('.opt,.wyr-opt').forEach(b=>{b.disabled=true;});
   notify('✅ Respuesta enviada');
+  updateAnswerChips(gameState);
 }
-
 function playerAnswerText(inputId) {
   const v=document.getElementById(inputId)?.value?.trim(); if(!v)return;
   playerAnswer(v);
   const el=document.getElementById(inputId); if(el)el.disabled=true;
 }
 
-// ══════════════════════════════════════
-//   DRAWING
-// ══════════════════════════════════════
-let dCtx=null,drawing=false,dColor='#000',dSize=4;
+// ═══════════════════════════════════════════
+//   DRAWING ENGINE
+// ═══════════════════════════════════════════
+let dCtx=null, drawing=false, dColor='#000', dSize=4;
 function initDraw() {
   const canvas=document.getElementById('draw-canvas'); if(!canvas)return;
   dCtx=canvas.getContext('2d'); dCtx.fillStyle='#fff'; dCtx.fillRect(0,0,canvas.width,canvas.height);
   dCtx.strokeStyle=dColor; dCtx.lineWidth=dSize; dCtx.lineCap='round'; dCtx.lineJoin='round';
-  const xy=(e)=>{ const r=canvas.getBoundingClientRect(),s=e.touches?e.touches[0]:e; return[(s.clientX-r.left)*canvas.width/r.width,(s.clientY-r.top)*canvas.height/r.height]; };
+  const xy=e=>{ const r=canvas.getBoundingClientRect(),s=e.touches?e.touches[0]:e; return[(s.clientX-r.left)*canvas.width/r.width,(s.clientY-r.top)*canvas.height/r.height]; };
   canvas.onmousedown=e=>{drawing=true;dCtx.beginPath();dCtx.moveTo(...xy(e));};
   canvas.onmousemove=e=>{if(!drawing)return;dCtx.lineTo(...xy(e));dCtx.stroke();syncDraw();};
   canvas.onmouseup=canvas.onmouseleave=()=>drawing=false;
@@ -1150,23 +1264,19 @@ function initDraw() {
   canvas.ontouchend=()=>drawing=false;
 }
 let drawThrottle=0;
-function syncDraw() {
-  const now=Date.now(); if(now-drawThrottle<600)return; drawThrottle=now;
-  const canvas=document.getElementById('draw-canvas'); if(!canvas)return;
-  setKey('drawData',canvas.toDataURL('image/jpeg',0.5));
-}
+function syncDraw(){const now=Date.now();if(now-drawThrottle<600)return;drawThrottle=now;const canvas=document.getElementById('draw-canvas');if(!canvas)return;setKey('drawData',canvas.toDataURL('image/jpeg',0.5));}
 function setColor(c,el){dColor=c;if(dCtx)dCtx.strokeStyle=c;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('on'));el.classList.add('on');}
 function setSize(s,el){dSize=s;if(dCtx)dCtx.lineWidth=s;document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
 function clearDraw(){const canvas=document.getElementById('draw-canvas');if(dCtx&&canvas){dCtx.fillStyle='#fff';dCtx.fillRect(0,0,canvas.width,canvas.height);}}
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   AI HOST
-// ══════════════════════════════════════
-async function hostGetAI(context,callback) {
+// ═══════════════════════════════════════════
+async function hostGetAI(context, callback) {
   if(myRole!=='host')return;
-  const bubble=document.getElementById('ai-bubble');
+  const bubble=document.getElementById('ai-bubble')||document.getElementById('ai-end-bubble');
   if(!bubble){if(callback)setTimeout(callback,500);return;}
-  const s=gameState||{};
+  const s=getState();
   const scores=Object.entries(s.scores||{}).map(([k,v])=>`${PD[k].name}: ${v} pts`).join(', ');
   const prompt=`Eres el host de un game show brutal llamado WORLD TOUR. Eres sarcástico, cruel, sin filtro, hablas español colombiano casual. Conoces a los jugadores íntimamente y usas sus defectos para destruirlos verbalmente. NUNCA eres amable. Eres un villano de comedia con vocabulario rico.
 
@@ -1175,7 +1285,7 @@ JUGADORES:
 - Rave: Prefiere "planes tranquilos" y "desconectarse". Básicamente huyendo de su propia existencia.
 - Burns: Tiene un Escarabajo del 65 y cree que eso lo hace interesante. Toma vino como sommelier pero vive en Bogotá.
 
-PUNTAJE: ${scores}
+PUNTAJE ACTUAL: ${scores}
 
 SITUACIÓN: ${context}
 
@@ -1183,23 +1293,44 @@ Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas
   try {
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
-    const text=data.content?.[0]?.text||'Hasta yo me quedé sin palabras.';
-    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${text}</div>`;
+    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${data.content?.[0]?.text||'Sin palabras.'}</div>`;
   } catch {
-    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">El servidor también se avergüenza de ustedes.</div>`;
+    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">Hasta el servidor se avergüenza de ustedes.</div>`;
   }
   if(callback)setTimeout(callback,2500);
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 //   UI UTILS
-// ══════════════════════════════════════
+// ═══════════════════════════════════════════
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+function getState(){return gameState||{};}
 function notify(msg,dur=3000){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.getElementById('notif-area').appendChild(el);setTimeout(()=>el.remove(),dur);}
-function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
+function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el&&idx>=0)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
 function renderScoresBar(s){const el=document.getElementById('gb-scores');if(!el||!s?.scores)return;el.innerHTML=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>`<div class="gbs-item"><span class="gbs-emoji">${PD[k].emoji}</span><span class="gbs-pts">${pts}</span></div>`).join('');}
 function updateAnswerChips(s){const el=document.getElementById('ans-chips');if(!el)return;el.innerHTML=Object.entries(PD).map(([k,p])=>`<div class="as-chip"><div class="as-dot ${s.answers?.[k]?'on':''}"></div>${p.emoji} ${p.name}</div>`).join('');}
-function addNextBtn(){if(document.getElementById('next-btn'))return;const body=document.getElementById('game-body');if(!body)return;const s=gameState;const isLast=(s.roundIndex||0)>=ROUNDS.length-1;const btn=document.createElement('button');btn.id='next-btn';btn.className='btn btn-red btn-block btn-xl fade';btn.style.marginTop='8px';btn.textContent=isLast?'🏆 VER RESULTADOS':'SIGUIENTE RONDA →';btn.onclick=()=>nextRound();body.appendChild(btn);}
+
+function addNextBtn(){
+  if(document.getElementById('next-btn'))return;
+  const body=document.getElementById('game-body'); if(!body)return;
+  const s=getState(); const isLast=(s.roundIndex||0)>=ROUNDS.length-1;
+  const btn=document.createElement('button');
+  btn.id='next-btn'; btn.className='btn btn-red btn-block btn-xl fade'; btn.style.marginTop='8px';
+  btn.textContent=isLast?'🏆 VER RESULTADOS':'SIGUIENTE RONDA →';
+  btn.onclick=()=>nextRound();
+  body.appendChild(btn);
+}
+
+function addContinueBtn(label, fn) {
+  if(document.getElementById('continue-btn'))return;
+  const body=document.getElementById('game-body'); if(!body)return;
+  const btn=document.createElement('button');
+  btn.id='continue-btn'; btn.className='btn btn-orange btn-block btn-xl fade'; btn.style.marginTop='8px';
+  btn.textContent=label;
+  btn.onclick=()=>{ btn.remove(); fn(); };
+  body.appendChild(btn);
+}
+
 let timerI=null;
 function startTimerBar(sec,fillId){if(timerI)clearInterval(timerI);let t=sec;timerI=setInterval(()=>{t--;const f=document.getElementById(fillId);if(f){f.style.width=(t/sec*100)+'%';if(t<=5)f.className='timer-fill urgent';}const tv=document.getElementById('gb-timer');if(tv){tv.textContent=t;tv.className='gb-timer'+(t<=5?' urgent':'');}if(t<=0)clearInterval(timerI);},1000);}
 function startTimerVal(sec){if(timerI)clearInterval(timerI);let t=sec;const tv=document.getElementById('gb-timer');if(tv)tv.textContent=t;timerI=setInterval(()=>{t--;if(tv){tv.textContent=t;tv.className='gb-timer'+(t<=5?' urgent':'');}if(t<=0)clearInterval(timerI);},1000);}
