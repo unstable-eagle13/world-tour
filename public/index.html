@@ -208,6 +208,14 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 @keyframes flyAround{0%{transform:translateX(-40px) rotate(-5deg)}50%{transform:translateX(40px) rotate(5deg)}100%{transform:translateX(-40px) rotate(-5deg)}}
 .champion-reveal{opacity:0;transform:translateY(20px);transition:all .6s ease}
 .champion-reveal.show{opacity:1;transform:translateY(0)}
+@keyframes glitch{
+  0%{transform:translate(0);color:var(--red)}
+  20%{transform:translate(-3px,1px);color:var(--gold)}
+  40%{transform:translate(3px,-1px);color:var(--blue)}
+  60%{transform:translate(-2px,2px);color:var(--red)}
+  80%{transform:translate(2px,-2px);color:var(--green)}
+  100%{transform:translate(0);color:var(--red)}
+}
 
 .host-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 #notif-area{position:fixed;top:16px;right:16px;z-index:1000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
@@ -369,16 +377,29 @@ const FINAL_BOSS_LIST = [
 //   SOCKET + STATE
 // ═══════════════════════════════════════════
 const socket = io();
-// Persist role/key across screen locks using sessionStorage
-let myRole = sessionStorage.getItem('wt_role') || null;
-let myKey  = sessionStorage.getItem('wt_key')  || null;
+// myRole/myKey: set when user picks their role. Persisted in sessionStorage
+// so screen lock doesn't log them out. But NOT auto-applied until user
+// explicitly taps "Reconectar" or selects a role.
+let myRole = null;
+let myKey  = null;
 let gameState = null;
 let lastRoundIndex = -1, lastPhase = null, lastBuzzed = null;
+let _firstStateReceived = false;
+
+// Check if there's a saved session to offer reconnect
+const _savedRole = sessionStorage.getItem('wt_role');
+const _savedKey  = sessionStorage.getItem('wt_key');
 
 function saveSession(role, key) {
   myRole = role; myKey = key || null;
   if (role) sessionStorage.setItem('wt_role', role); else sessionStorage.removeItem('wt_role');
   if (key)  sessionStorage.setItem('wt_key', key);  else sessionStorage.removeItem('wt_key');
+}
+
+function clearSession() {
+  myRole = null; myKey = null;
+  sessionStorage.removeItem('wt_role');
+  sessionStorage.removeItem('wt_key');
 }
 
 socket.on('connect', () => {
@@ -389,21 +410,72 @@ socket.on('disconnect', () => {
   document.getElementById('conn-dot').classList.remove('on');
   document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...';
 });
-// When server sends state, if we have a saved session and game is running, restore the player view
 socket.on('state', s => {
   const prev = gameState; gameState = s;
-  // Auto-restore if we had a session and lost it
-  if (myRole && myKey && s.gameStarted && !document.getElementById('s-game').classList.contains('on')
-      && !document.getElementById('s-host').classList.contains('on')) {
-    // Re-register join in state silently
-    if (!s.joined?.[myKey]) {
-      socket.emit('patch', { joined: { ...(s.joined||{}), [myKey]: true } });
+
+  // On first state received: if we have a saved session AND game is running,
+  // show a reconnect banner — let user decide, don't auto-hijack the screen
+  if (!_firstStateReceived) {
+    _firstStateReceived = true;
+    if (_savedRole && _savedKey && s.gameStarted) {
+      showReconnectBanner(_savedRole, _savedKey, s);
     }
-    show('s-game');
-    lastRoundIndex = -1; lastPhase = null; // force full re-render
   }
-  onStateUpdate(prev, s);
+
+  // If user has already chosen their role and is in-game, keep syncing
+  if (myRole && (document.getElementById('s-game').classList.contains('on') ||
+                  document.getElementById('s-host').classList.contains('on'))) {
+    onStateUpdate(prev, s);
+    return;
+  }
+
+  // If user is in the waiting room, keep syncing too
+  if (myRole === 'player' && document.getElementById('s-player-wait').classList.contains('on')) {
+    onStateUpdate(prev, s);
+    return;
+  }
+
+  // Otherwise just update gameState silently (needed for player-select to show taken slots)
+  if (myRole) onStateUpdate(prev, s);
 });
+
+function showReconnectBanner(role, key, s) {
+  // Show a subtle banner at the top of entry screen
+  const banner = document.createElement('div');
+  banner.id = 'reconnect-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--s2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:100;gap:12px';
+  const nameStr = role === 'host' ? 'Host' : (PD[key]?.name || key);
+  banner.innerHTML = `
+    <div style="font-size:13px;color:var(--text)">Sesion anterior: <strong>${nameStr}</strong></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-orange" style="padding:7px 14px;font-size:13px" onclick="doReconnect('${role}','${key}')">Reconectar</button>
+      <button class="btn btn-ghost" style="padding:7px 14px;font-size:13px" onclick="this.parentElement.parentElement.remove();clearSession()">Ignorar</button>
+    </div>`;
+  document.body.appendChild(banner);
+}
+
+function doReconnect(role, key) {
+  document.getElementById('reconnect-banner')?.remove();
+  if (role === 'host') {
+    saveSession('host', null);
+    show('s-host');
+    updateHostPanel(gameState);
+  } else {
+    saveSession('player', key);
+    const s = gameState;
+    if (!s.joined?.[key]) {
+      socket.emit('patch', { joined: { ...(s.joined||{}), [key]: true } });
+    }
+    if (s.gameStarted) {
+      show('s-game');
+      lastRoundIndex = -1; lastPhase = null;
+      onStateUpdate(null, s);
+    } else {
+      document.getElementById('pw-name-display').textContent = PD[key]?.emoji + ' ' + PD[key]?.name;
+      show('s-player-wait');
+    }
+  }
+}
 
 function patch(data) { socket.emit('patch', data); }
 function setKey(key, value) { socket.emit('set', { key, value }); }
@@ -413,6 +485,7 @@ function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 //   STATE REACTIONS
 // ═══════════════════════════════════════════
 function onStateUpdate(prev, s) {
+  if (!myRole) return; // not yet joined
   if (myRole === 'host') {
     if (document.getElementById('s-host').classList.contains('on')) updateHostPanel(s);
     if (document.getElementById('s-game').classList.contains('on')) {
@@ -460,6 +533,7 @@ function onStateUpdate(prev, s) {
     }
     if (s.phase === 'reveal') { playerShowReveal(); return; }
     if (s.phase === 'end') { playerShowEnd(s); return; }
+    if (s.phase === 'chaos') { playerShowChaos(); return; }
   }
 
   // currentQ arrived late
@@ -947,7 +1021,7 @@ function hostBoss() {
   document.getElementById('game-body').innerHTML=`
     <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 solo al que acierte.</div></div>
+      <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertas. -150 si fallas.</div></div>
       <div class="boss-question">${q.q}</div>
       <div class="timer-bar"><div class="timer-fill urgent" id="t-fill" style="width:100%"></div></div>
       <div class="ans-status" id="ans-chips"></div>
@@ -960,11 +1034,94 @@ function hostBoss() {
 function hostRevealBoss() {
   const s=gameState, q=s.currentQ;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=parseInt(v)===q.correct;if(w)ns[k]=(ns[k]||0)+300;return{k,v,w};});
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=parseInt(v)===q.correct;if(w)ns[k]=(ns[k]||0)+300;else ns[k]=Math.max(0,(ns[k]||0)-150);return{k,v,w};});
   patch({ scores:ns, phase:'reveal' });
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--red);margin-bottom:6px">RESPUESTA FINAL</div><div class="reveal-answer glow-gold">${q.opts[q.correct]}</div>${rows.map(({k,v,w,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><div><div class="pr-name">${PD[k].name}</div><div style="font-size:11px;color:var(--muted)">${q.roasts?.[k]||''}</div></div></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+300':'no suma'}</span></div>`).join('')}</div>`);
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--red);margin-bottom:6px">RESPUESTA FINAL</div><div class="reveal-answer glow-gold">${q.opts[q.correct]}</div>${rows.map(({k,v,w,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><div><div class="pr-name">${PD[k].name}</div><div style="font-size:11px;color:var(--muted)">${q.roasts?.[k]||''}</div></div></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+300':'-150'}</span></div>`).join('')}</div>`);
   renderScoresBar(getState());
-  setTimeout(()=>hostEndGame(), 4000);
+  setTimeout(()=>hostChaosRound(), 4000);
+}
+
+// ── SECRET CHAOS ROUND ──
+const CHAOS_POINTS = [
+  { name:'Sexy Points', emoji:'💋' },
+  { name:'Racism Points', emoji:'🤡' },
+  { name:'Retard Points', emoji:'🧠' },
+  { name:'Pussy Points', emoji:'🐱' },
+  { name:'Nigga Points', emoji:'🤜' },
+  { name:'Points por participar (por lástima)', emoji:'🥺' },
+  { name:'Cuchurrumi Points', emoji:'😘' },
+  { name:'Nazi Points', emoji:'🦅' },
+  { name:'Ñero Points', emoji:'😤' },
+  { name:'Puntos por Estilo', emoji:'😎' }
+];
+
+function hostChaosRound() {
+  patch({ phase:'chaos', scores: gameState.scores });
+  const body = document.getElementById('game-body');
+  // Phase 1: Malfunction animation
+  body.innerHTML = `<div class="fade" style="text-align:center;padding:40px 20px">
+    <div id="glitch-title" style="font-family:'Bebas Neue',sans-serif;font-size:60px;color:var(--red);animation:glitch 0.3s infinite">CARGANDO PODIO...</div>
+    <p style="color:var(--muted);font-size:14px;margin-top:8px">Por favor espere...</p>
+  </div>`;
+  document.getElementById('gb-round').textContent = 'BONUS';
+
+  // Simulate malfunction after 2s
+  setTimeout(() => {
+    body.innerHTML = `<div class="fade" style="text-align:center;padding:20px 0">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);margin-bottom:6px">⚠️ ERROR DEL SISTEMA ⚠️</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--gold);margin-bottom:8px">LIGHTNING ROUND</div>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">El sistema ha detectado irregularidades. Se procederá a distribución de puntos de emergencia.</p>
+      <div id="chaos-area"></div>
+    </div>`;
+    runChaosDistribution();
+  }, 2500);
+}
+
+function runChaosDistribution() {
+  // Pick 5 random chaos point types
+  const shuffled = [...CHAOS_POINTS].sort(() => Math.random() - 0.5).slice(0, 5);
+  const players = ['felipe', 'rave', 'burns'];
+  const area = document.getElementById('chaos-area');
+
+  shuffled.forEach((pt, i) => {
+    setTimeout(() => {
+      // Pick random winner
+      const winner = players[Math.floor(Math.random() * 3)];
+      const pts = Math.floor(Math.random() * 200) + 50; // 50-250 random points
+      const ns = {...gameState.scores};
+      ns[winner] = (ns[winner] || 0) + pts;
+      patch({ scores: ns });
+
+      // Show roulette spin then reveal
+      const row = document.createElement('div');
+      row.style.cssText = 'background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;margin-bottom:8px;text-align:center';
+      row.innerHTML = `<div style="font-size:14px;color:var(--muted);margin-bottom:6px">${pt.emoji} ${pt.name}</div>
+        <div class="roulette-spin" id="roulette-${i}" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--orange)">🎰 girando...</div>`;
+      area.appendChild(row);
+
+      // Spin animation then reveal
+      let spinCount = 0;
+      const spinInterval = setInterval(() => {
+        const randomPlayer = players[Math.floor(Math.random() * 3)];
+        const el = document.getElementById('roulette-'+i);
+        if (el) el.textContent = PD[randomPlayer].emoji + ' ' + PD[randomPlayer].name + '...';
+        spinCount++;
+        if (spinCount > 8) {
+          clearInterval(spinInterval);
+          const el2 = document.getElementById('roulette-'+i);
+          if (el2) el2.innerHTML = `<span style="color:var(--gold)">${PD[winner].emoji} ${PD[winner].name} +${pts} pts</span>`;
+          // AI comment after a delay
+          if (i === shuffled.length - 1) {
+            setTimeout(() => {
+              hostGetAI(`Se acaba de completar la Lightning Round secreta del World Tour. Se repartieron puntos de emergencia incluyendo categorias como "${shuffled.map(p=>p.name).join('", "')}". Los ganadores fueron aleatorios. Comenta de forma brutal y personal sobre cada jugador que recibio puntos caoticos. Usa lo que sabes de cada uno para que el comentario sea devastadoramente personal.`, () => {
+                setTimeout(() => hostEndGame(), 4000);
+              });
+            }, 800);
+          }
+        }
+      }, 150);
+    }, i * 1800);
+  });
 }
 
 // ── END GAME — reveal worst to best, plane animation ──
@@ -1074,6 +1231,14 @@ function playerShowEnd(s) {
   document.getElementById('gb-round').textContent = 'FIN';
 }
 
+function playerShowChaos() {
+  document.getElementById('gb-round').textContent = 'BONUS';
+  document.getElementById('game-body').innerHTML=`<div class="fade" style="text-align:center;padding:40px 20px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold);margin-bottom:8px">LIGHTNING ROUND</div>
+    <p style="font-size:14px;color:var(--muted)">El sistema ha detectado irregularidades...</p>
+    <div class="dots" style="justify-content:center;display:flex;margin-top:16px"><span></span><span></span><span></span></div>
+  </div>`;
+}
 function playerShowQuestion(s) {
   const t = ROUNDS[s.roundIndex]?.type;
   if(t==='mem_warn')   playerMemWarn(s);
@@ -1239,7 +1404,7 @@ function playerBoss(s) {
   if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 solo si aciertas.</div></div>
+    <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertas. -150 si fallas.</div></div>
     <div class="boss-question">${q.q}</div>
     <div class="opts-2">${q.opts.map((o,i)=>`<button class="opt" onclick="playerAnswer('${i}')">${o}</button>`).join('')}</div>
     <div class="ans-status" id="ans-chips"></div></div>`;
