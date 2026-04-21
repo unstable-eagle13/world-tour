@@ -717,12 +717,13 @@ function hostStartGame() {
 function resetGame(){if(!confirm('Reiniciar?'))return;saveSession(null,null);socket.emit('reset');location.reload();}
 // KEY FIX: sub-round indices LOCAL on host, never synced => eliminates infinite loop race condition
 let timerInt=null,htIdx=0,wyrIdx=0,ccIdx=0,descTurnLocal=0,drawTurnLocal=0,roundHistory={};
+let _usedDescWords=new Set(),_usedDrawWords=new Set(),_lastDescPlayer=null,_lastDrawPlayer=null;
 function hostRunRound(idx){
   if(idx>=ROUNDS.length){hostEndGame();return;}
   if(timerInt)clearInterval(timerInt);
   const rtype=ROUNDS[idx].type;
   if(rtype==='hot_takes')htIdx=0;if(rtype==='wyr')wyrIdx=0;
-  if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe')descTurnLocal=0;if(rtype==='draw')drawTurnLocal=0;
+  if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe'){descTurnLocal=0;_usedDescWords=new Set();_lastDescPlayer=null;}if(rtype==='draw'){drawTurnLocal=0;_usedDrawWords=new Set();_lastDrawPlayer=null;}
   patch({roundIndex:idx,phase:'intro',answers:{},buzzed:null,buzzOrder:[],jepResponses:[],currentQ:null,drawData:null});
   updateRoundBadge(idx);
   const r=ROUNDS[idx];
@@ -767,10 +768,11 @@ function hostMemWarn() {
   renderMemWarnScreen(gameState.memItems || MEMORY_POOLS[0]);
 }
 
+let _memWarnTimerIv = null;
 function renderMemWarnScreen(items) {
+  if (_memWarnTimerIv) { clearInterval(_memWarnTimerIv); _memWarnTimerIv = null; }
   patch({ phase:'question', currentQ:null, answers:{}, memItems: items });
   let t = 30;
-  let timerRunning = true;
   document.getElementById('game-body').innerHTML = `<div class="q-card fade">
     <div style="text-align:center;padding:8px 0">
       <div style="font-size:48px;margin-bottom:10px">👁️</div>
@@ -784,13 +786,13 @@ function renderMemWarnScreen(items) {
       <button class="btn btn-ghost" onclick="refreshMemItems()" style="font-size:12px">↺ Cambiar símbolos</button>
     </div>
   </div>`;
-  const iv = setInterval(()=>{
+  _memWarnTimerIv = setInterval(()=>{
     t--;
     const f=document.getElementById('mw-fill'), cd=document.getElementById('mw-cd');
     if(f) f.style.width=(t/30*100)+'%';
     if(cd) cd.textContent=t+'s';
     if(t<=0){
-      clearInterval(iv);
+      clearInterval(_memWarnTimerIv); _memWarnTimerIv=null;
       hostGetAI('Los jugadores acaban de ver los items de memoria. Amenazalos de forma criptica y oscura.',()=>{
         showNavPanel({
           onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
@@ -816,11 +818,7 @@ function refreshMemItems() {
 
 // HOT TAKES - local htIdx
 function hostHotTakes(){
-  if(htIdx>=HOT_TAKES.length){
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade"><div class="q-label">Hot Takes completadas</div><p style="font-size:14px;color:var(--muted)">Usaste las ${HOT_TAKES.length} preguntas.</p></div>`;
-    showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
-    return;
-  }
+  if(htIdx>=HOT_TAKES.length) htIdx=0;
   const q=HOT_TAKES[htIdx],ci=htIdx;
   patch({phase:'question',currentQ:q,answers:{}});
   document.getElementById('game-body').innerHTML=`
@@ -844,10 +842,11 @@ function hostRevealHotTake(){
   renderScoresBar(getState());
   saveHistory('hot_takes',htIdx,q.q,rows);
   const ci=htIdx;htIdx++;
+  if(htIdx>=HOT_TAKES.length) htIdx=0;
   hostGetAI(`HT${ci+1} veredicto: "${q.correct}". ${rows.map(({k,v})=>`${PD[k].name} voto ${v}`).join(', ')}. Destruye a los que fallaron.`,()=>{
     showNavPanel({
-      onPrevQ:ci>0?()=>{htIdx=ci;patch({answers:{}});hostHotTakes();}:null,
-      onNextQ:htIdx<HOT_TAKES.length?()=>hostHotTakes():null,
+      onPrevQ:ci>0?()=>{htIdx=Math.max(0,ci-1);patch({answers:{}});hostHotTakes();}:null,
+      onNextQ:()=>hostHotTakes(),
       onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
       onNextGame:()=>nextRound()
     });
@@ -1076,13 +1075,16 @@ function hostRevealConspiracy(){
   });
 }
 // ── DESCRIBE IT — 3 turns, one per player, random order ──
+function pickUnusedWord(list,used){const u=list.filter(w=>!used.has(w));const pool=u.length>0?u:list;const w=pool[Math.floor(Math.random()*pool.length)];used.add(w);return w;}
+function pickNextPlayer(order,turn,last){const c=order.filter(p=>p!==last);if(!c.length)return order[turn%order.length];return c[Math.floor(Math.random()*c.length)];}
+
 function hostDescribeRound() {
   const turn=descTurnLocal;
   const order=gameState.playerOrder||['felipe','rave','burns'];
   if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
-  const drawer = order[turn];
-  const word = DESCRIBE_WORDS[Math.floor(Math.random()*DESCRIBE_WORDS.length)];
-  // Host does NOT see the word — it goes only to the drawer via state
+  const drawer=pickNextPlayer(order,turn,_lastDescPlayer);_lastDescPlayer=drawer;
+  const word=pickUnusedWord(DESCRIBE_WORDS,_usedDescWords);
+  // Host does NOT see the word
   patch({ phase:'question', currentQ:{word, drawer, turn, descChat:[]}, answers:{} });
   document.getElementById('game-body').innerHTML=`
     <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
@@ -1168,8 +1170,8 @@ function hostDrawRound() {
   const turn=drawTurnLocal;
   const order=gameState.playerOrder||['felipe','rave','burns'];
   if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
-  const drawer = order[turn];
-  const word = DRAW_WORDS[Math.floor(Math.random()*DRAW_WORDS.length)];
+  const drawer=pickNextPlayer(order,turn,_lastDrawPlayer);_lastDrawPlayer=drawer;
+  const word=pickUnusedWord(DRAW_WORDS,_usedDrawWords);
   // Host does NOT see word
   patch({ phase:'question', currentQ:{word, drawer, turn, drawChat:[]}, answers:{}, drawData:null });
   document.getElementById('game-body').innerHTML=`
@@ -1353,44 +1355,49 @@ const CHAOS_POINTS = [
   { name:'Retard Points', emoji:'🧠' },
   { name:'Pussy Points', emoji:'🐱' },
   { name:'Nigga Points', emoji:'🤜' },
-  { name:'Points por participar (por lástima)', emoji:'🥺' },
+  { name:'Points por participar (por lastima)', emoji:'🥺' },
   { name:'Cuchurrumi Points', emoji:'😘' },
   { name:'Nazi Points', emoji:'🦅' },
-  { name:'Ñero Points', emoji:'😤' },
+  { name:'Nero Points', emoji:'😤' },
   { name:'Puntos por Estilo', emoji:'😎' }
 ];
 
-// Build guaranteed distribution: each player gets at least 1 prize
-// 5 prizes total for 3 players: distribute as [2,2,1] shuffled
-function buildChaosAssignments() {
-  const players = ['felipe', 'rave', 'burns'];
-  const shuffledPts = [...CHAOS_POINTS].sort(()=>Math.random()-0.5).slice(0,5);
-  // Guarantee each player gets at least 1
-  const shuffledPlayers = [...players].sort(()=>Math.random()-0.5);
-  const assignments = [];
-  // First 3: one each
-  for (let i=0;i<3;i++) assignments.push({ player: shuffledPlayers[i], pt: shuffledPts[i] });
-  // Last 2: random
-  for (let i=3;i<5;i++) assignments.push({ player: players[Math.floor(Math.random()*3)], pt: shuffledPts[i] });
-  // Shuffle final order for drama
-  return assignments.sort(()=>Math.random()-0.5);
+const VIRUS_PHRASES = [
+  "No todos habrian hecho click... pero tu si.",
+  "Eso no fue tentacion... fue decision.",
+  "La duda duro cero segundos. Interesante.",
+  "Tu heterosexualidad acaba de pedir un tiempo indefinido.",
+  "Relajate... aqui no juzgamos. Pero tu solito te expusiste."
+];
+
+function assignVirusPhrases() {
+  const players=['felipe','rave','burns'];
+  const shuffled=[...VIRUS_PHRASES].sort(()=>Math.random()-0.5);
+  const r={};
+  players.forEach((p,i)=>{ r[p]=shuffled[i%shuffled.length]; });
+  return r;
+}
+
+function buildMarioCards() {
+  const players=['felipe','rave','burns'];
+  const pts_opts=[50,75,100,125];
+  return [...CHAOS_POINTS].sort(()=>Math.random()-0.5).slice(0,4).map(pt=>({
+    pt, pts:pts_opts[Math.floor(Math.random()*pts_opts.length)],
+    winner:players[Math.floor(Math.random()*3)], revealed:false
+  }));
 }
 
 function hostChaosRound() {
-  const assignments = buildChaosAssignments();
-  // Store assignments in state so players can react
-  patch({ phase:'chaos', chaosStep:'download', chaosAssignments: assignments, chaosClicks:{} });
-  document.getElementById('gb-round').textContent = 'BONUS';
-
-  const body = document.getElementById('game-body');
-  // Host sees glitch → then progress panel
-  body.innerHTML = `<div class="fade" style="text-align:center;padding:30px 20px">
+  const phrases=assignVirusPhrases();
+  patch({ phase:'chaos', chaosStep:'download', chaosClicks:{}, chaosPhrases:phrases, chaosAssignments:[] });
+  document.getElementById('gb-round').textContent='BONUS';
+  const body=document.getElementById('game-body');
+  body.innerHTML=`<div class="fade" style="text-align:center;padding:30px 20px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--red);animation:glitch 0.3s infinite">CARGANDO PODIO...</div>
     <p style="color:var(--muted);font-size:14px;margin-top:8px">Por favor espere...</p>
   </div>`;
-
   setTimeout(()=>{
-    body.innerHTML = `<div class="fade" style="display:flex;flex-direction:column;gap:14px">
+    body.innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px">
       <div style="text-align:center">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)">ALERTA DE VIRUS DETECTADO</div>
         <p style="font-size:13px;color:var(--muted);margin-top:4px">Los jugadores deben completar el proceso de instalacion...</p>
@@ -1402,61 +1409,118 @@ function hostChaosRound() {
         </div>
         <div id="chaos-progress-text" style="font-size:12px;color:var(--muted);text-align:center">0 / 3 jugadores infectados</div>
       </div>
-      <div id="chaos-results" style="display:flex;flex-direction:column;gap:8px"></div>
-      <div id="chaos-final-btn" style="display:none">
-        <div id="chaos-host-bubble" class="host-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+      <div id="chaos-phrase-results" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="chaos-deduction-area" style="display:none">
+        <div style="background:#1f0a0a;border:1px solid var(--red);border-radius:var(--r);padding:16px;text-align:center;margin-bottom:12px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red)">-250 puntos a todos</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">por chismosos</div>
+        </div>
+        <button onclick="startMarioRound()" style="width:100%;padding:20px;border-radius:var(--r);border:2px solid var(--red);cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px;background:var(--s2);color:var(--red);letter-spacing:.05em">
+          NO PRESIONAR
+        </button>
       </div>
     </div>`;
-    // Poll for clicks
-    const pollId = setInterval(()=>{
-      const s = gameState;
-      const clicks = s.chaosClicks || {};
-      const clicked = Object.keys(clicks).filter(k=>clicks[k]==='revealed');
-      const pct = (clicked.length/3*100);
-      const bar = document.getElementById('chaos-progress-bar');
-      const txt = document.getElementById('chaos-progress-text');
-      if (bar) bar.style.width = pct+'%';
-      if (txt) txt.textContent = `${clicked.length} / 3 jugadores infectados`;
-      // Show result for each player who clicked
-      const results = document.getElementById('chaos-results');
-      if (results) {
-        const assignments = s.chaosAssignments||[];
-        results.innerHTML = clicked.map(k=>{
-          const playerAssignments = assignments.filter(a=>a.player===k);
-          return playerAssignments.map(a=>`
-            <div class="reveal-card fade" style="border-color:var(--gold)">
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="font-size:24px">${PD[k].emoji}</span>
-                <div>
-                  <div style="font-weight:600;font-size:15px">${PD[k].name}</div>
-                  <div style="font-size:13px;color:var(--gold)">${a.pt.emoji} ${a.pt.name}</div>
-                </div>
-                <div style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)">+${Math.floor(Math.random()*150)+75} pts</div>
-              </div>
-            </div>`).join('');
-        }).join('');
+    const pollId=setInterval(()=>{
+      const s=gameState;
+      const clicks=s.chaosClicks||{};
+      const revealed=Object.keys(clicks).filter(k=>clicks[k]==='revealed');
+      const bar=document.getElementById('chaos-progress-bar');
+      const txt=document.getElementById('chaos-progress-text');
+      if(bar) bar.style.width=(revealed.length/3*100)+'%';
+      if(txt) txt.textContent=`${revealed.length} / 3 jugadores infectados`;
+      const phraseArea=document.getElementById('chaos-phrase-results');
+      if(phraseArea&&revealed.length>0){
+        const phrases=s.chaosPhrases||{};
+        phraseArea.innerHTML=revealed.map(k=>`<div class="reveal-card fade" style="border-color:var(--purple)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:22px">${PD[k].emoji}</span>
+            <div><div style="font-weight:600;font-size:14px">${PD[k].name}</div>
+            <div style="font-size:13px;color:var(--purple);font-style:italic">"${phrases[k]||''}"</div></div>
+          </div></div>`).join('');
       }
-      // All 3 clicked
-      if (clicked.length >= 3) {
+      if(revealed.length>=3){
         clearInterval(pollId);
-        // Apply points from assignments
-        const ns = {...s.scores};
-        const allAssignments = s.chaosAssignments||[];
-        allAssignments.forEach(a=>{
-          const pts = Math.floor(Math.random()*150)+75;
-          ns[a.player] = (ns[a.player]||0)+pts;
-        });
+        const ns={...s.scores};
+        Object.keys(PD).forEach(k=>{ns[k]=Math.max(0,(ns[k]||0)-250);});
         patch({scores:ns});
         renderScoresBar(getState());
-        const finalBtn = document.getElementById('chaos-final-btn');
-        if (finalBtn) finalBtn.style.display='block';
-        const descList = allAssignments.map(a=>`${PD[a.player].name} recibio ${a.pt.name}`).join(', ');
-        hostGetAI(`Lightning Round completada. Los jugadores descargaron el virus y recibieron: ${descList}. Haz el comentario final mas devastador y personal de todo el juego. Usa lo que sabes de cada jugador y los puntos que recibieron para destruirlos individualmente.`, ()=>{
-          setTimeout(()=>hostEndGame(), 5000);
-        });
+        setTimeout(()=>{
+          const da=document.getElementById('chaos-deduction-area');
+          if(da) da.style.display='block';
+        },2500);
       }
-    }, 800);
-  }, 2500);
+    },600);
+  },2500);
+}
+
+let _marioCards=[], _marioRevealed=0;
+function startMarioRound(){
+  _marioCards=buildMarioCards(); _marioRevealed=0;
+  const body=document.getElementById('game-body');
+  body.innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px">
+    <div style="text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold)">LIGHTNING ROUND</div>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px">Selecciona una casilla para revelarla</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="mario-grid">
+      ${_marioCards.map((_,i)=>`<div id="mc-${i}" onclick="revealMarioCard(${i})" style="background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r);padding:20px 12px;text-align:center;cursor:pointer;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:all .2s">
+        <div style="font-size:32px">🎰</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted)">CASILLA ${i+1}</div>
+        <div style="font-size:11px;color:var(--dim)">Tipo: ???</div>
+        <div style="font-size:11px;color:var(--dim)">Jugador: ???</div>
+        <div style="font-size:11px;color:var(--dim)">Puntos: ???</div>
+      </div>`).join('')}
+    </div>
+    <div id="mario-log" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>`;
+}
+
+function revealMarioCard(idx){
+  const card=_marioCards[idx];
+  if(!card||card.revealed)return;
+  card.revealed=true; _marioRevealed++;
+  const el=document.getElementById('mc-'+idx);
+  if(!el)return;
+  el.style.borderColor='var(--gold)';el.style.cursor='default';el.onclick=null;
+  // Show type + points, spin player slot
+  el.innerHTML=`
+    <div style="font-size:22px">${card.pt.emoji}</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold)">${card.pt.name}</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--orange)">+${card.pts} pts</div>
+    <div id="ms-${idx}" style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--muted)">girando...</div>`;
+  // Spin: start fast, slow down to dramatic stop over 3 seconds
+  const players=['felipe','rave','burns'];
+  const frames=[80,80,100,100,120,140,160,200,240,280,320,360,400]; // increasing delay
+  let fi=0;
+  function spinFrame(){
+    const spinEl=document.getElementById('ms-'+idx);
+    if(!spinEl)return;
+    if(fi>=frames.length){
+      spinEl.innerHTML=`<span style="color:var(--green)">${PD[card.winner].emoji} ${PD[card.winner].name}</span>`;
+      // Apply points
+      const ns={...gameState.scores};
+      ns[card.winner]=(ns[card.winner]||0)+card.pts;
+      patch({scores:ns});
+      renderScoresBar(getState());
+      // Log entry
+      const log=document.getElementById('mario-log');
+      if(log){
+        const e=document.createElement('div');e.className='reveal-card fade';e.style.borderColor='var(--gold)';
+        e.innerHTML=`<div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">${card.pt.emoji}</span>
+          <div style="flex:1"><div style="font-size:12px;color:var(--gold)">${card.pt.name}</div>
+          <div style="font-size:14px;font-weight:600">${PD[card.winner].emoji} ${PD[card.winner].name}</div></div>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)">+${card.pts}</span></div>`;
+        log.insertBefore(e,log.firstChild);
+      }
+      if(_marioRevealed>=4) setTimeout(()=>hostEndGame(),3500);
+      return;
+    }
+    const p=players[Math.floor(Math.random()*3)];
+    spinEl.textContent=PD[p].emoji+' '+PD[p].name+'...';
+    setTimeout(spinFrame,frames[fi++]);
+  }
+  setTimeout(spinFrame,80);
 }
 
 // ── END GAME — reveal worst to best, plane animation ──
@@ -1567,56 +1631,43 @@ function playerShowEnd(s) {
 }
 
 function playerShowChaos() {
-  document.getElementById('gb-round').textContent = 'BONUS';
-  const s = gameState;
-  const clicks = s.chaosClicks || {};
-  const myClick = clicks[myKey];
-
-  if (!myClick) {
-    // Step 1: Show download button
+  document.getElementById('gb-round').textContent='BONUS';
+  const s=gameState;
+  const myClick=(s.chaosClicks||{})[myKey];
+  if(!myClick){
     document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:28px 20px">
       <div style="font-size:48px;margin-bottom:12px">📦</div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);margin-bottom:8px">NUEVO MENSAJE</div>
       <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;text-align:left">
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">De: WorldTour-System@realgame.com</div>
         <div style="font-size:14px;font-weight:600;margin-bottom:8px">Tu pack gratuito de Felipollo esta listo</div>
-        <div style="font-size:13px;color:var(--muted)">Haz click abajo para descargar tu pack personalizado de WorldTour. Contiene sorpresas especiales para ti.</div>
+        <div style="font-size:13px;color:var(--muted)">Haz click abajo para descargar tu pack personalizado. Contiene sorpresas especiales para ti.</div>
       </div>
-      <button class="btn btn-gold btn-block btn-xl" onclick="chaosStep1()" style="background:var(--gold);color:#000;padding:16px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:22px;width:100%">
+      <button style="width:100%;padding:18px;background:var(--gold);color:#000;border:none;border-radius:var(--r);cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:22px" onclick="chaosStep1()">
         Descargar pack de Felipollo
       </button>
     </div>`;
-  } else if (myClick === 'step1') {
-    // Step 2: Infection message
+  } else if(myClick==='step1'){
     document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:28px 20px">
       <div style="font-size:64px;margin-bottom:12px">😿</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);margin-bottom:8px">La curiosidad mato al gato</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);margin-bottom:8px">La curiosidad mato al gato</div>
       <div style="background:#1f0a0a;border:1px solid var(--red);border-radius:var(--r);padding:14px;margin-bottom:16px">
         <div style="font-size:14px;color:var(--red);font-weight:600;margin-bottom:6px">El virus ha sido instalado correctamente</div>
-        <div style="font-family:'DM Sans',monospace;font-size:11px;color:var(--muted);line-height:1.8">
-          > Scanning files...<br>
-          > Access granted<br>
-          > Uploading to servidor_supremo.exe<br>
-          > Installation: COMPLETE
-        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.8;font-family:monospace">> Scanning files...<br>> Access granted<br>> Uploading...<br>> Installation: COMPLETE</div>
       </div>
-      <button class="btn btn-red btn-block" onclick="chaosStep2()" style="padding:14px;border-radius:var(--r);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;background:var(--red);color:#fff;width:100%">
+      <button style="width:100%;padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--r);cursor:pointer;font-size:15px;font-weight:600" onclick="chaosStep2()">
         Click aqui para revelar de que se trata
       </button>
     </div>`;
-  } else if (myClick === 'revealed') {
-    // Step 3: Show their chaos points
-    const assignments = s.chaosAssignments || [];
-    const mine = assignments.filter(a=>a.player===myKey);
-    document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:24px 20px">
-      <div style="font-size:48px;margin-bottom:10px">🎪</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);margin-bottom:14px">TUS PUNTOS SECRETOS</div>
-      ${mine.map(a=>`
-        <div style="background:var(--s2);border:1px solid var(--gold);border-radius:var(--r);padding:16px;margin-bottom:10px">
-          <div style="font-size:32px;margin-bottom:6px">${a.pt.emoji}</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)">${a.pt.name}</div>
-        </div>`).join('')}
-      <p style="font-size:13px;color:var(--muted);margin-top:10px">Los puntos se suman al final.</p>
+  } else if(myClick==='revealed'){
+    const phrase=(s.chaosPhrases||{})[myKey]||'La curiosidad tiene consecuencias.';
+    document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:28px 20px">
+      <div style="font-size:48px;margin-bottom:16px">🔏</div>
+      <div style="background:var(--s2);border:1px solid var(--purple);border-radius:var(--r);padding:20px;margin-bottom:16px">
+        <div style="font-size:16px;color:var(--purple);font-style:italic;line-height:1.6">"${phrase}"</div>
+      </div>
+      <p style="font-size:13px;color:var(--muted)">Esperando que todos completen el proceso...</p>
+      <div class="dots" style="display:flex;justify-content:center;margin-top:10px"><span></span><span></span><span></span></div>
     </div>`;
   }
 }
@@ -1783,7 +1834,7 @@ function playerDescribe(s) {
         <div class="q-label">Tu turno de describir (${(q.turn||0)+1}/3)</div>
         <div id="drawer-reveal-area" style="text-align:center;padding:20px 0">
           <div style="font-size:14px;color:var(--muted);margin-bottom:8px">La palabra se revela en...</div>
-          <div id="drawer-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">10</div>
+          <div id="drawer-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">3</div>
         </div>
         <p style="font-size:13px;color:var(--muted);text-align:center">Prepárate para describir sin decir la palabra.</p>
       </div>`;
@@ -1792,8 +1843,9 @@ function playerDescribe(s) {
   } else {
     // Guesser: live chat input, no answer lock
     const body = document.getElementById('game-body');
-    if (!body.querySelector('#desc-chat-area')) {
-      body.innerHTML=`<div class="q-card fade">
+    const _existDTG = body.querySelector('[data-desc-turn]')?.dataset.descTurn;
+    if (!body.querySelector('#desc-chat-area') || _existDTG !== String(q.turn)) {
+      body.innerHTML=`<div class="q-card fade" data-desc-turn="${q.turn}">
         <div class="q-label">${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} describe algo...</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Escribe lo que crees que es (puedes enviar múltiples respuestas):</div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -1822,14 +1874,14 @@ function playerDescribe(s) {
 }
 
 function startDrawerCountdown(word) {
-  let t = 10;
+  let t = 3;
   const iv = setInterval(() => {
     t--;
     const el = document.getElementById('drawer-countdown');
     if (!el) { clearInterval(iv); return; }
     if (t > 0) {
       el.textContent = t;
-      el.style.color = t <= 3 ? 'var(--green)' : 'var(--red)';
+      el.style.color = t <= 1 ? 'var(--green)' : 'var(--red)';
     } else {
       clearInterval(iv);
       const area = document.getElementById('drawer-reveal-area');
@@ -1881,16 +1933,16 @@ function playerDraw(s) {
         <div class="q-label">Tu turno de dibujar (${(q.turn||0)+1}/3)</div>
         <div id="draw-reveal-area" style="text-align:center;padding:16px 0">
           <div style="font-size:14px;color:var(--muted);margin-bottom:8px">El prompt se revela en...</div>
-          <div id="draw-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">10</div>
+          <div id="draw-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">3</div>
         </div>
         <p style="font-size:13px;color:var(--muted);text-align:center">Prepárate para dibujar.</p>
       </div>`;
-      let dc = 10;
+      let dc = 3;
       const dcIv = setInterval(()=>{
         dc--;
         const el=document.getElementById('draw-countdown');
         if(!el){clearInterval(dcIv);return;}
-        if(dc>0){el.textContent=dc;el.style.color=dc<=3?'var(--green)':'var(--red)';}
+        if(dc>0){el.textContent=dc;el.style.color=dc<=1?'var(--green)':'var(--red)';}
         else{
           clearInterval(dcIv);
           const area=document.getElementById('draw-reveal-area');
@@ -1917,8 +1969,9 @@ function playerDraw(s) {
   } else {
     // Guesser: chat mode, no answer lock
     const body = document.getElementById('game-body');
-    if (!body.querySelector('#draw-chat-area')) {
-      body.innerHTML=`<div class="q-card fade">
+    const _existDWG = body.querySelector('[data-draw-turn]')?.dataset.drawTurn;
+    if (!body.querySelector('#draw-chat-area') || _existDWG !== String(q.turn)) {
+      body.innerHTML=`<div class="q-card fade" data-draw-turn="${q.turn}">
         <div class="q-label">${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} dibuja algo...</div>
         <div style="font-size:13px;color:var(--muted);margin-bottom:8px">¿Qué crees que es? Escribe (puedes enviar varias respuestas):</div>
         <div style="display:flex;gap:8px;margin-bottom:8px">
