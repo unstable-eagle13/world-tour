@@ -723,7 +723,7 @@ function hostMemWarn() {
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
     <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
   </div>`;
-  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los ítems de memoria. Amenázalos de forma críptica y oscura. Que no sepan qué viene.',()=>addNextBtn());} },1000);
+  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los items de memoria. Amenazalos de forma criptica y oscura. Que no sepan que viene.',()=>{showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});});} },1000);
 }
 
 // HOT TAKES - local htIdx
@@ -791,9 +791,31 @@ function hostWYR(){
 function hostRevealWYR(){
   const s=gameState,q=s.currentQ;if(!q)return;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ns[k]=(ns[k]||0)+75;return{k,v};});
+  const answers=s.answers||{};
+  // Count votes for A and B
+  const votesA=Object.values(answers).filter(v=>v==='A').length;
+  const votesB=Object.values(answers).filter(v=>v==='B').length;
+  const total=votesA+votesB;
+  // Scoring: majority (more than half) = 100pts, all same = 75pts, alone = 50pts
+  const rows=Object.entries(answers).map(([k,v])=>{
+    const sameCount=v==='A'?votesA:votesB;
+    let pts=0;
+    if(total===0) pts=0;
+    else if(sameCount===total) pts=75;   // all 3 chose same
+    else if(sameCount>total/2) pts=100;  // majority (2 of 3)
+    else pts=50;                          // alone (1 of 3)
+    ns[k]=(ns[k]||0)+pts;
+    return{k,v,pts};
+  });
   patch({phase:'reveal',scores:ns});
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">LO QUE ELIGIERON</div>${rows.map(({k,v})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'A) '+q.a.substring(0,45)+'...':'B) '+q.b.substring(0,45)+'...'}</span></div><span class="pr-pts pts-win">+75</span></div>`).join('')}</div>`);
+  const majority=votesA>votesB?'A':'B';
+  const majorityText=majority==='A'?'A) '+q.a.substring(0,50)+'...':'B) '+q.b.substring(0,50)+'...';
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px">LO QUE ELIGIERON</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Mayoria: <strong style="color:var(--text)">${majorityText}</strong></div>
+    ${rows.map(({k,v,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'A) '+q.a.substring(0,40)+'...':'B) '+q.b.substring(0,40)+'...'}</span></div><span class="pr-pts ${pts>0?'pts-win':'pts-lose'}">+${pts}</span></div>`).join('')}
+    <div style="font-size:11px;color:var(--dim);margin-top:8px">Mayoria (2/3): +100 pts · Todos igual: +75 pts · Solo (1/3): +50 pts</div>
+  </div>`);
   renderScoresBar(getState());
   saveHistory('wyr',wyrIdx,q.a+'/'+q.b,rows);
   const ci=wyrIdx;wyrIdx++;
@@ -839,7 +861,9 @@ function hostPickJep(cat, pts) {
     <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-top:10px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${cat} — ${pts} pts</div>
       <div style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:8px">${item.q}</div>
-      <div style="font-size:12px;color:var(--green)">✓ Respuesta: ${item.a}</div>
+      <div id="jep-answer-hidden" style="background:var(--s2);border:1px dashed var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--muted);cursor:pointer" onclick="revealJepAnswer('${item.a.replace(/'/g,"\\'")}')">
+        🔒 Respuesta oculta — clic para revelar (solo el host la ve)
+      </div>
     </div>
     <div id="buzz-board" class="buzz-order-board"></div>
     <div class="host-controls" style="margin-top:8px">
@@ -849,6 +873,18 @@ function hostPickJep(cat, pts) {
       <button class="btn btn-ghost" onclick="jepDone()">→ Siguiente casilla</button>
     </div>`;
   startTimerVal(15);
+}
+
+function revealJepAnswer(answer) {
+  const el = document.getElementById('jep-answer-hidden');
+  if (el) {
+    el.style.background = 'var(--s3)';
+    el.style.borderColor = 'var(--green)';
+    el.style.color = 'var(--green)';
+    el.style.cursor = 'default';
+    el.innerHTML = '✓ Respuesta: ' + answer;
+    el.onclick = null;
+  }
 }
 
 function renderBuzzBoard(order) {
@@ -867,6 +903,9 @@ function renderBuzzBoard(order) {
 
 function resetBuzz() {
   patch({ buzzOrder:[], buzzed:null });
+  // Clear buzz board visually immediately (don't wait for server roundtrip)
+  const board = document.getElementById('buzz-board');
+  if (board) board.innerHTML = '';
   notify('🔄 Buzz reseteado — pueden volver a buzzear');
 }
 
@@ -879,13 +918,32 @@ function judgeJep(correct) {
   else { ns[player]=Math.max(0,(ns[player]||0)-Math.floor(pts/2)); notify(`❌ ${PD[player].name} -${Math.floor(pts/2)} pts`); }
   patch({ scores:ns, buzzOrder:[], buzzed:null });
   renderScoresBar(getState());
-  hostGetAI(`${PD[player].name} ${correct?'respondió correctamente':'falló miserablemente'} en Jeopardy (${jepQ?.q}). ${correct?'+'+pts:'-'+Math.floor(pts/2)} puntos.`);
+  const s2=gameState; const total2=Object.values(JEOPARDY_DATA).reduce((a,c)=>a+c.length,0);
+  const allUsed=Object.keys(s2.jepUsed||{}).length>=total2;
+  hostGetAI(`${PD[player].name} ${correct?'respondio correctamente':'fallo miserablemente'} en Jeopardy. ${correct?'+'+pts:'-'+Math.floor(pts/2)} puntos.`, () => {
+    if (allUsed) {
+      showNavPanel({
+        onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+        onNextGame:()=>nextRound()
+      });
+    }
+    // If not all used, host picks more casillas from the grid above
+  });
 }
 
 function jepDone() {
   const s=gameState; const total=Object.values(JEOPARDY_DATA).reduce((a,c)=>a+c.length,0);
-  if (Object.keys(s.jepUsed||{}).length>=total) addNextBtn();
-  else notify('Aún hay casillas disponibles');
+  if (Object.keys(s.jepUsed||{}).length>=total) {
+    showNavPanel({
+      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+      onNextGame:()=>nextRound()
+    });
+  }
+  // Even if not done, always show nav so host can leave
+  else {
+    // Keep grid visible, but ensure nav is accessible via the grid itself
+    // Don't show nav here - host should pick more casillas or use grid
+  }
 }
 
 // CONSPIRACY - local ccIdx
