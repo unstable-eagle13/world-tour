@@ -309,20 +309,25 @@ const HOT_TAKES = [
   { q:'La gente que lee libros físicos en público lo hace para que la vean leyendo.', correct:'A favor', reason:'Si lees en silencio en casa eso es hobbit. Si lees en un café con cara pensativa y el libro bien visible, eso es marketing personal de bajo presupuesto.' }
 ];
 
-// 3 WYR (all used, in order)
+// 7 WYR — host navigates freely
 const WYR_LIST = [
-  { a:'¿Que tu ex vea tus búsquedas de Google de los últimos 3 años?', b:'¿Que tu jefe escuche todo lo que dices de él en privado?' },
-  { a:'¿Que un loro repita en voz alta tus pensamientos más sucios en el momento más inapropiado?', b:'¿Que tu cara haga la expresión exacta de lo que piensas sin poder controlarlo?' },
-  { a:'¿Nunca más poder usar pantalón? Solo vestidos o faldas, sin importar el contexto.', b:'¿Gritar "¡CON PERMISO!" a máximo volumen cada vez que entras a cualquier cuarto?' }
+  { a:'¿Que tu novia/esposa vea tus búsquedas de Google de los últimos 3 años (incluyendo modo incógnito)?', b:'¿Que tus papás vean tus búsquedas de Google de los últimos 3 años (incluyendo modo incógnito)?' },
+  { a:'¿Comer una cucharada de cabello humano ajeno cada mañana para siempre?', b:'¿Oler a huevo podrido únicamente cuando estás en ascensores llenos?' },
+  { a:'¿Que un loro repita en voz alta tus pensamientos más sucios en el momento más inapropiado?', b:'¿Que tu cuenta de Twitter publique automáticamente todos tus pensamientos sin filtro, en tiempo real?' },
+  { a:'¿Tener que bailar reggaetón 30 segundos cada vez que alguien dice tu nombre?', b:'¿Que cada vez que mientes te salga un hilo de saliva en la comisura?' },
+  { a:'¿Nunca más poder usar pantalón (solo vestidos o faldas, sin importar el contexto)?', b:'¿Tener que gritar "¡CON PERMISO!" a máximo volumen cada vez que entras a cualquier cuarto?' },
+  { a:'¿Escuchar en tu cabeza lo que la gente realmente piensa de ti... pero nunca saber si es verdad o lo estás imaginando?', b:'¿Que tu peor momento vergonzoso se reproduzca en la mente de todos los presentes cada vez que entras a un lugar?' },
+  { a:'¿Que no puedas evitar decir exactamente lo que piensas de cada persona justo cuando la ves (sin filtro alguno)?', b:'¿Poder ver exactamente cómo y cuándo va a morir cada persona que tocas, sin poder decir nada ni cambiarlo?' }
 ];
 
-// 3 conspiracies (all used, in order)
+// 5 real conspiracy theories
 const CONSPIRACY_LIST = [
-  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974. La evidencia más sólida: nunca se ven palomas bebé.', q:'¿Quién está detrás?', opts:['La CIA y el KGB en alianza secreta','Nixon lo ordenó antes de renunciar','Los fabricantes de migas de pan para controlar la economía','Las palomas sí existen pero están en la Luna'], correct:1, reveal:'CONFIRMADO: Nixon, harto de que lo espiaran a ÉL, decidió espiar a todos primero. Los drones no se reproducen, por eso nunca ves palomas bebé. Hay un video de YouTube con 47 vistas que lo admite todo.' },
-  { setup:'Los semáforos en rojo duran exactamente el tiempo para que pienses en alguien de tu pasado que te hizo daño. No es coincidencia. Es tecnología de 1962.', q:'¿Cuál es el verdadero propósito?', opts:['Hacerte vulnerable para que compres más en el centro comercial cercano','Experimento de Spotify para generarte el mood perfecto','Los semáforos emiten ondas de nostalgia para reducir velocidad','El municipio cobra royalties emocionales por cada trauma generado'], correct:0, reveal:'Los semáforos fueron conectados al sistema de publicidad urbana en 1978. Cada trauma activado equivale a un 34% más de probabilidad de entrar a una tienda. En Bogotá los semáforos duran 4 minutos porque tienen más traumas que procesar.' },
-  { setup:'IKEA diseña deliberadamente sus muebles difíciles de armar para medir la tolerancia al estrés. Cada mueble ensamblado es un punto de datos para predecir colapsos sociales.', q:'¿Qué hacen con esa información?', opts:['La venden a gobiernos para saber cuándo subir impuestos','La usan para decidir cuándo lanzar películas de superhéroes','La comparten con parejas a punto de comprometerse como test de compatibilidad','La usan para predecir el próximo Mundial y apostar en secreto'], correct:0, reveal:'Cuando el índice de frustración IKEA sube 12%, los gobiernos anuncian reformas impopulares. Colombia lleva 30 años en nivel máximo de estrés IKEA, de ahí todo lo demás.' }
+  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974 para vigilar a la ciudadanía. La evidencia clave: nunca se ven palomas bebé, y cuando mueren desaparecen antes de que alguien las encuentre.', q:'¿Quién está detrás de la conspiración de las palomas?', opts:['La CIA y el KGB en alianza secreta post-Guerra Fría','Nixon lo ordenó antes de renunciar como último acto de paranoia','Los fabricantes de migas de pan para controlar la economía urbana','Las palomas reales existen pero están en instalaciones secretas'], correct:1, reveal:'La teoría Birds Aren't Real fue iniciada por Peter McIndoe en 2017. Nixon habría ordenado el exterminio de todas las aves en EEUU y las reemplazó con drones. Tiene millones de seguidores y marchas organizadas. La ausencia de palomas bebé es su evidencia estrella. McIndoe confesó en 2022 que era sátira... pero los creyentes no le creyeron.' },
+  { setup:'El Proyecto MKUltra fue un programa REAL y confirmado por el Congreso en 1977. La CIA experimentó con LSD y otras sustancias en ciudadanos sin su consentimiento desde los años 50. Lo que los teoristas afirman es que nunca terminó: simplemente se volvió más sofisticado.', q:'¿Cuál es la versión moderna del MKUltra según los teoristas?', opts:['El fluoruro en el agua potable que suprime el pensamiento crítico','Los teléfonos celulares que emiten ondas de control emocional','Las redes sociales diseñadas como experimentos de manipulación de masas','Todas son señaladas actualmente como continuaciones del programa'], correct:3, reveal:'Las tres son citadas por teoristas serios. Lo perturbador: Facebook realizó en 2014 un experimento de manipulación emocional en 700,000 usuarios sin su consentimiento — y lo admitió. El fluoruro en agua sigue siendo tema de debate científico real. Y los documentos de MKUltra desclasificados muestran experimentos mucho más oscuros que los reportados inicialmente.' },
+  { setup:'La Matanza de Jonestown en 1978 fue presentada como suicidio masivo de 918 personas en Guyana. Pero el 70% de las víctimas tenían marcas de inyección en la espalda — un lugar imposible de alcanzar uno mismo. El Congresista Leo Ryan, que iba a investigar los vínculos con la CIA, fue asesinado días antes.', q:'¿Qué era realmente Jonestown según los teoristas?', opts:['Un experimento de control mental de la CIA relacionado con MKUltra','Una base de entrenamiento para agentes soviéticos en América Latina','Un laboratorio de armas biológicas disfrazado de comunidad religiosa','Un experimento para estudiar el colapso de civilizaciones aisladas'], correct:0, reveal:'La conexión CIA-Jonestown tiene décadas de investigación seria. Jim Jones tenía vínculos documentados con figuras de inteligencia. Las marcas en las espaldas, la destrucción inmediata del sitio por militares, y el silenciamiento de sobrevivientes son puntos sin resolver oficialmente. Los documentos desclasificados confirman que la CIA monitoreaba el Templo del Pueblo — nunca explicaron por qué.' },
+  { setup:'Paul McCartney murió en un accidente de auto en noviembre de 1966 y fue reemplazado por un doble. Los Beatles insertaron mensajes en sus canciones anunciando la muerte. En la portada de Abbey Road, Paul camina descalzo y fuera de paso. En Revolution 9 al revés se escucha "Turn me on, dead man". Y en Sgt. Pepper hay flores formando el número 28IF — la edad que tendría si viviera.', q:'¿Cuál es la razón más oscura que dan los teoristas para mantener el secreto?', opts:['El sello discográfico Capitol no quería perder su inversión de millones de dólares','El gobierno británico temía que la noticia desestabilizara la economía','Los propios Beatles habían firmado contratos que los hacían responsables de la muerte','Porque el reemplazo Billy Shears chantajeó a los tres Beatles sobrevivientes'], correct:1, reveal:'La teoría Paul is Dead tiene millones de seguidores. La versión del "gobierno británico" sostiene que MI5 ordenó el encubrimiento porque la muerte de McCartney hubiera colapsado la industria del entretenimiento del Reino Unido. Paul McCartney eventualmente grabó un álbum titulado "Paul is Live" parodiando Abbey Road. Los tres otros Beatles nunca lo desmintieron directamente durante años.' },
+  { setup:'La teoría del Universo Simulado no es solo filosofía: científicos como Nick Bostrom de Oxford calculan que la probabilidad de que vivamos en una simulación computacional es del 99.9%. Elon Musk afirmó públicamente que "casi con certeza vivimos en una simulación". En 2022, físicos encontraron un límite matemático en la velocidad de la luz que es exactamente consistente con una resolución computacional máxima.', q:'Si vivimos en una simulación, ¿qué evidencia señalan los físicos como la más perturbadora?', opts:['El principio de incertidumbre de Heisenberg: las partículas no existen hasta que las "observamos" — como objetos en un videojuego que no se renderizan hasta que los ves','El límite de la velocidad de la luz funciona exactamente como un límite de procesamiento computacional','Las constantes físicas del universo son exactamente los valores mínimos necesarios para que exista materia compleja — como si alguien las calibrara','Todas las anteriores son citadas como evidencia por físicos y filósofos serios'], correct:3, reveal:'Las tres son argumentos reales usados por físicos serios. El principio antrópico (constantes calibradas), el límite computacional de la velocidad de la luz, y el colapso de función de onda cuántica son pilares del argumento de simulación. Lo más perturbador: no existe ningún experimento que pueda descartar definitivamente que vivamos en una simulación. Es matemáticamente irrefutable.' }
 ];
-
 const JEOPARDY_DATA = {
   'Ciencia Inútil':[
     { pts:100, q:'El nombre científico del miedo a las palabras largas que irónicamente tiene 36 letras.', a:'¿Qué es hipopotomonstrosesquipedaliofobia?' },
@@ -352,11 +357,14 @@ const MEMORY_POOLS = [
   [{emoji:'🦊',label:'Zorro'},{emoji:'🍦',label:'Helado'},{emoji:'🎪',label:'Carpa de circo'},{emoji:'🐋',label:'Ballena'},{emoji:'🔭',label:'Telescopio'},{emoji:'🧲',label:'Imán'}]
 ];
 
+// 5 Final Boss questions — very obscure
 const FINAL_BOSS_LIST = [
-  { q:'¿Cuántas palomas se estima que hay en el mundo?', opts:['400 millones','1.2 billones','220 millones','780 millones'], correct:0, roasts:{felipe:'Para alguien obsesionado con estrategia militar, no sabe nada de vigilancia aérea.',rave:'Ni sus cálculos "eficientes" lo salvaron.',burns:'El Escarabajo duró más que tu racha de respuestas correctas.'} },
-  { q:'¿En qué año fue el primer partido de fútbol jugado bajo lluvia documentado oficialmente?', opts:['1872','1891','1863','1905'], correct:0, roasts:{felipe:'Los dinosaurios jugaban fútbol y aún así no sabes esto.',rave:'Un fanático del fútbol que no sabe su propia historia. Vergonzoso.',burns:'El Real Madrid tampoco lo sabe. En eso coinciden perfectamente.'} }
+  { q:'Un pulpo tiene tres corazones. ¿Cuántos dejan de latir cuando nada activamente?', opts:['Ninguno, los tres siguen latiendo','Dos — los corazones branquiales','Uno — el corazón sistémico central','Los tres entran en modo mínimo'], correct:2, note:'Cuando un pulpo nada, el corazón sistémico central se detiene. Solo los dos corazones branquiales (que bombean a las branquias) siguen activos. Por eso los pulpos prefieren arrastrarse.' },
+  { q:'¿Cuál es el único animal científicamente probado que puede reconocer su nombre pero que evolutivamente no desarrolló ningún incentivo para responder?', opts:['El delfín mular','El cuervo común','El gato doméstico','La orca'], correct:2, note:'Estudio de la Universidad de Sophia, Tokio, 2019: los gatos distinguen perfectamente su nombre de otras palabras similares. Simplemente eligen no responder. No es estupidez — es indiferencia consciente evolutiva.' },
+  { q:'¿En qué año se tomó la primera selfie de la historia?', opts:['1839 — Robert Cornelius con 1 minuto de exposición','1887 — con flash de magnesio que explotó','1901 — en la cima del Monte Fuji','1926 — un astrónomo en Arizona'], correct:0, note:'Robert Cornelius tuvo que quedarse completamente inmóvil frente a su cámara por casi un minuto. Escribió al dorso: "La primera luz que jamás tomó una imagen de una persona." Sobrevivió.' },
+  { q:'¿Cuál fue el primer país en otorgar el derecho a voto a las mujeres a nivel nacional?', opts:['Suecia, 1919','Australia, 1902','Finlandia, 1906','Nueva Zelanda, 1893'], correct:3, note:'Nueva Zelanda en 1893. Australia fue segundo en 1902 pero excluía a mujeres aborígenes. Finlandia en 1906 fue el primero en permitirles también postularse a cargos.' },
+  { q:'La Antártida es el desierto más grande del mundo. ¿Cuánta precipitación recibe al año en su interior?', opts:['Menos de 50mm — similar al Sahara','200-400mm — como selva seca','500-800mm — como Londres','Más de 1000mm — más que el Amazonas'], correct:0, note:'El interior de la Antártida recibe menos de 50mm de precipitación equivalente al año — menos que el Sahara. La nieve visible es nieve antigua que nunca se derritió, no precipitación reciente.' }
 ];
-
 // ═══════════════════════════════════════════
 //   SOCKET + STATE
 // ═══════════════════════════════════════════
@@ -539,59 +547,60 @@ function updateHostPanel(s) {
 }
 
 function hostStartGame() {
-  const memItems = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
-  const playerKeys = shuffle(['felipe','rave','burns']);
+  const memItems=MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
+  const playerKeys=shuffle(['felipe','rave','burns']);
   show('s-game');
-  patch({ gameStarted:true, roundIndex:0, phase:'intro', scores:{felipe:0,rave:0,burns:0}, answers:{}, buzzed:null, buzzOrder:[], jepUsed:{}, drawData:null, currentQ:null, htIndex:0, wyrIndex:0, ccIndex:0, memItems, playerOrder:playerKeys, descTurn:0, drawTurn:0 });
-  renderScoresBar(gameState||{scores:{felipe:0,rave:0,burns:0}});
+  patch({gameStarted:true,roundIndex:0,phase:'intro',scores:{felipe:0,rave:0,burns:0},answers:{},buzzed:null,buzzOrder:[],jepUsed:{},drawData:null,currentQ:null,memItems,playerOrder:playerKeys,descTurn:0,drawTurn:0});
+  renderScoresBar({scores:{felipe:0,rave:0,burns:0}});
   hostRunRound(0);
 }
-
-function resetGame() {
-  if (!confirm('¿Reiniciar el juego?')) return;
-  saveSession(null, null);
-  socket.emit('reset'); location.reload();
-}
-
-// ═══════════════════════════════════════════
-//   HOST GAME CONTROL
-// ═══════════════════════════════════════════
-let timerInt = null;
-
-function hostRunRound(idx) {
-  if (idx >= ROUNDS.length) { hostEndGame(); return; }
-  if (timerInt) clearInterval(timerInt);
-  patch({ roundIndex:idx, phase:'intro', answers:{}, buzzed:null, buzzOrder:[], currentQ:null, drawData:null });
+function resetGame(){if(!confirm('Reiniciar?'))return;saveSession(null,null);socket.emit('reset');location.reload();}
+// KEY FIX: sub-round indices LOCAL on host, never synced => eliminates infinite loop race condition
+let timerInt=null,htIdx=0,wyrIdx=0,ccIdx=0,descTurnLocal=0,drawTurnLocal=0,roundHistory={};
+function hostRunRound(idx){
+  if(idx>=ROUNDS.length){hostEndGame();return;}
+  if(timerInt)clearInterval(timerInt);
+  const rtype=ROUNDS[idx].type;
+  if(rtype==='hot_takes')htIdx=0;if(rtype==='wyr')wyrIdx=0;
+  if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe')descTurnLocal=0;if(rtype==='draw')drawTurnLocal=0;
+  patch({roundIndex:idx,phase:'intro',answers:{},buzzed:null,buzzOrder:[],currentQ:null,drawData:null});
   updateRoundBadge(idx);
-  const r = ROUNDS[idx];
-  document.getElementById('game-body').innerHTML = `<div class="round-intro fade">
+  const r=ROUNDS[idx];
+  document.getElementById('game-body').innerHTML=`<div class="round-intro fade">
     <div class="ri-num">RONDA ${idx+1} DE ${ROUNDS.length}</div>
-    <div class="ri-emoji">${r.emoji}</div>
-    <div class="ri-name">${r.name}</div>
-    <div class="ri-desc">${r.desc}</div>
+    <div class="ri-emoji">${r.emoji}</div><div class="ri-name">${r.name}</div><div class="ri-desc">${r.desc}</div>
     <button class="btn btn-red btn-xl" onclick="hostExecuteRound(${idx})" style="margin-top:8px">EMPEZAR →</button>
   </div>`;
 }
-
-function hostExecuteRound(idx) {
-  const t = ROUNDS[idx].type;
-  if(t==='mem_warn')   hostMemWarn();
-  else if(t==='hot_takes')  hostHotTakes();
-  else if(t==='wyr')        hostWYR();
-  else if(t==='jeopardy')   hostJeopardy();
-  else if(t==='conspiracy') hostConspiracy();
-  else if(t==='describe')   hostDescribeRound();
-  else if(t==='draw')       hostDrawRound();
-  else if(t==='memory')     hostMemory();
-  else if(t==='boss')       hostBoss();
+function hostExecuteRound(idx){
+  const t=ROUNDS[idx].type;
+  if(t==='mem_warn')hostMemWarn();else if(t==='hot_takes')hostHotTakes();else if(t==='wyr')hostWYR();
+  else if(t==='jeopardy')hostJeopardy();else if(t==='conspiracy')hostConspiracy();
+  else if(t==='describe')hostDescribeRound();else if(t==='draw')hostDrawRound();
+  else if(t==='memory')hostMemory();else if(t==='boss')hostBoss();
 }
-
-function nextRound() {
-  const next = (gameState.roundIndex||0)+1;
-  if (next >= ROUNDS.length) { hostEndGame(); return; }
-  hostRunRound(next);
+function nextRound(){const n=(gameState.roundIndex||0)+1;if(n>=ROUNDS.length){hostEndGame();return;}hostRunRound(n);}
+function showNavPanel(opts){
+  document.getElementById('nav-panel')?.remove();
+  document.getElementById('next-btn')?.remove();
+  document.getElementById('continue-btn')?.remove();
+  const cr=gameState.roundIndex||0;
+  const p=document.createElement('div');p.id='nav-panel';
+  p.style.cssText='background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-top:8px;display:flex;flex-direction:column;gap:8px';
+  const jb=ROUNDS.filter(r=>r.type!=='mem_warn').map(r=>{const ai=ROUNDS.findIndex(rr=>rr.id===r.id);return `<button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;${ai===cr?'border-color:var(--red);color:var(--red)':''}" onclick="navJumpTo(${ai})">${r.emoji}</button>`;}).join('');
+  p.innerHTML=`<div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase">Control del host</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${opts.onPrevQ?`<button class="btn btn-ghost" style="font-size:13px;padding:8px 14px" onclick="navAct('prevQ')">← Pregunta anterior</button>`:''}
+      ${opts.onNextQ?`<button class="btn btn-orange" style="font-size:13px;padding:8px 14px" onclick="navAct('nextQ')">Siguiente pregunta →</button>`:''}
+      ${opts.onNextGame?`<button class="btn btn-red" style="font-size:13px;padding:8px 14px" onclick="navAct('nextGame')">Siguiente ronda</button>`:''}
+      ${opts.onPrevGame?`<button class="btn btn-ghost" style="font-size:13px;padding:8px 14px" onclick="navAct('prevGame')">Ronda anterior</button>`:''}
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span style="font-size:12px;color:var(--muted)">Ir a:</span>${jb}</div>`;
+  document.getElementById('game-body').appendChild(p);window._navCbs=opts;
 }
-
+function navAct(a){const m={prevQ:'onPrevQ',nextQ:'onNextQ',nextGame:'onNextGame',prevGame:'onPrevGame'};const cb=window._navCbs?.[m[a]];if(cb)cb();}
+function navJumpTo(idx){hostRunRound(idx);}
+function saveHistory(t,i,q,r){if(!roundHistory[t])roundHistory[t]=[];roundHistory[t][i]={q,r};}
 // ── MEMORY WARNING ──
 function hostMemWarn() {
   patch({ phase:'question', currentQ:null, answers:{} });
@@ -608,94 +617,86 @@ function hostMemWarn() {
   const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los ítems de memoria. Amenázalos de forma críptica y oscura. Que no sepan qué viene.',()=>addNextBtn());} },1000);
 }
 
-// ── HOT TAKES — 3 rounds ──
-function hostHotTakes() {
-  const s = gameState;
-  const idx = s.htIndex || 0;
-  if (idx >= HOT_TAKES.length) { addNextBtn(); return; }
-  const q = HOT_TAKES[idx];
-  patch({ phase:'question', currentQ:q, answers:{}, htIndex: idx });
-  const isLast = idx === HOT_TAKES.length - 1;
+// HOT TAKES - local htIdx
+function hostHotTakes(){
+  if(htIdx>=HOT_TAKES.length){
+    document.getElementById('game-body').innerHTML=`<div class="q-card fade"><div class="q-label">Hot Takes completadas</div><p style="font-size:14px;color:var(--muted)">Usaste las ${HOT_TAKES.length} preguntas.</p></div>`;
+    showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    return;
+  }
+  const q=HOT_TAKES[htIdx],ci=htIdx;
+  patch({phase:'question',currentQ:q,answers:{}});
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label">🌶️ Hot Take ${idx+1} de ${HOT_TAKES.length}</div>
-      <div class="q-text">"${q.q}"</div>
+      <div class="q-label">Hot Take ${ci+1} de ${HOT_TAKES.length}</div>
+      <div class="q-text">&ldquo;${q.q}&rdquo;</div>
       <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
       <div class="ans-status" id="ans-chips"></div>
       <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealHotTake()">Revelar veredicto</button></div>
     </div>`;
   startTimerBar(20,'t-fill');
-  hostGetAI(`Hot take ${idx+1}: "${q.q}". Preséntalo dramáticamente. Haz que duden de su propia existencia.`);
+  hostGetAI(`Hot take ${ci+1}: "${q.q}". Presentalo dramaticamente, haz que duden de todo.`);
 }
-
-function hostRevealHotTake() {
-  const s=gameState, q=s.currentQ; if(!q)return;
+function hostRevealHotTake(){
+  const s=gameState,q=s.currentQ;if(!q)return;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=v.toLowerCase().includes(q.correct.toLowerCase()); if(w)ns[k]=(ns[k]||0)+100; return{k,v,w}; });
-  patch({ phase:'reveal', scores:ns });
-  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">VEREDICTO OFICIAL</div><div class="reveal-answer">${q.correct}</div><p style="font-size:13px;line-height:1.6;margin-bottom:12px">${q.reason}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+100':'0'}</span></div>`).join('')}</div>`;
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=v.toLowerCase().includes(q.correct.toLowerCase());if(w)ns[k]=(ns[k]||0)+100;return{k,v,w};});
+  patch({phase:'reveal',scores:ns});
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">VEREDICTO OFICIAL</div><div class="reveal-answer">${q.correct}</div><p style="font-size:13px;line-height:1.6;margin-bottom:12px">${q.reason}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+100':'0'}</span></div>`).join('')}</div>`);
   renderScoresBar(getState());
-  const ctx=rows.map(({k,v})=>`${PD[k].name} votó "${v}"`).join(', ');
-  const nextIdx = (s.htIndex||0) + 1;
-  const hasMore = nextIdx < HOT_TAKES.length;
-  hostGetAI(`Veredicto: "${q.correct}". ${ctx}. Destruye a quienes fallaron.`, () => {
-    if (hasMore) {
-      addContinueBtn(`→ Hot Take ${nextIdx+1}`, () => {
-        patch({ htIndex: nextIdx, answers:{} });
-        hostHotTakes();
-      });
-    } else {
-      addNextBtn();
-    }
+  saveHistory('hot_takes',htIdx,q.q,rows);
+  const ci=htIdx;htIdx++;
+  hostGetAI(`HT${ci+1} veredicto: "${q.correct}". ${rows.map(({k,v})=>`${PD[k].name} voto ${v}`).join(', ')}. Destruye a los que fallaron.`,()=>{
+    showNavPanel({
+      onPrevQ:ci>0?()=>{htIdx=ci;patch({answers:{}});hostHotTakes();}:null,
+      onNextQ:htIdx<HOT_TAKES.length?()=>hostHotTakes():null,
+      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+      onNextGame:()=>nextRound()
+    });
   });
 }
-
-// ── WYR — 3 rounds ──
-function hostWYR() {
-  const s = gameState;
-  const idx = s.wyrIndex || 0;
-  if (idx >= WYR_LIST.length) { addNextBtn(); return; }
-  const q = WYR_LIST[idx];
-  patch({ phase:'question', currentQ:q, answers:{}, wyrIndex: idx });
+// WYR - local wyrIdx
+function hostWYR(){
+  if(wyrIdx>=WYR_LIST.length){
+    document.getElementById('game-body').innerHTML=`<div class="q-card fade"><div class="q-label" style="color:var(--purple)">Would You Rather completadas</div><p style="font-size:14px;color:var(--muted)">Usaste las ${WYR_LIST.length} preguntas.</p></div>`;
+    showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    return;
+  }
+  const q=WYR_LIST[wyrIdx],ci=wyrIdx;
+  patch({phase:'question',currentQ:q,answers:{}});
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label" style="color:var(--purple)">😈 Would You Rather ${idx+1} de ${WYR_LIST.length}</div>
+      <div class="q-label" style="color:var(--purple)">Would You Rather ${ci+1} de ${WYR_LIST.length}</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="wyr-opt" style="cursor:default">🅰️ ${q.a}</div>
-        <div class="wyr-divider">— O —</div>
-        <div class="wyr-opt" style="cursor:default">🅱️ ${q.b}</div>
+        <div class="wyr-opt" style="cursor:default">A) ${q.a}</div>
+        <div class="wyr-divider">--- O ---</div>
+        <div class="wyr-opt" style="cursor:default">B) ${q.b}</div>
       </div>
       <div class="ans-status" id="ans-chips"></div>
       <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealWYR()">Ver elecciones</button></div>
     </div>`;
-  hostGetAI(`Would You Rather ${idx+1}: A) "${q.a.substring(0,60)}" vs B) "${q.b.substring(0,60)}". Que sientan el peso de sus futuros errores.`);
+  hostGetAI(`WYR ${ci+1}: A "${q.a.substring(0,50)}" vs B "${q.b.substring(0,50)}". Que sientan el peso moral.`);
 }
-
-function hostRevealWYR() {
-  const s=gameState, q=s.currentQ;
+function hostRevealWYR(){
+  const s=gameState,q=s.currentQ;if(!q)return;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ ns[k]=(ns[k]||0)+75; return{k,v}; });
-  patch({ phase:'reveal', scores:ns });
-  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">LO QUE ELIGIERON</div>${rows.map(({k,v})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'🅰️ '+q.a.substring(0,45)+'...':'🅱️ '+q.b.substring(0,45)+'...'}</span></div><span class="pr-pts pts-win">+75</span></div>`).join('')}</div>`;
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ns[k]=(ns[k]||0)+75;return{k,v};});
+  patch({phase:'reveal',scores:ns});
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted);margin-bottom:10px">LO QUE ELIGIERON</div>${rows.map(({k,v})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'A) '+q.a.substring(0,45)+'...':'B) '+q.b.substring(0,45)+'...'}</span></div><span class="pr-pts pts-win">+75</span></div>`).join('')}</div>`);
   renderScoresBar(getState());
-  const nextIdx = (s.wyrIndex||0) + 1;
-  const hasMore = nextIdx < WYR_LIST.length;
-  hostGetAI(`${rows.map(({k,v})=>`${PD[k].name} eligió ${v==='A'?'A':'B'}`).join(', ')}. Juzga sus decisiones morales sin piedad.`, () => {
-    if (hasMore) {
-      addContinueBtn(`→ Would You Rather ${nextIdx+1}`, () => {
-        patch({ wyrIndex: nextIdx, answers:{} });
-        hostWYR();
-      });
-    } else {
-      addNextBtn();
-    }
+  saveHistory('wyr',wyrIdx,q.a+'/'+q.b,rows);
+  const ci=wyrIdx;wyrIdx++;
+  hostGetAI(`WYR ${ci+1}: ${rows.map(({k,v})=>`${PD[k].name} eligio ${v}`).join(', ')}. Juzga sin piedad.`,()=>{
+    showNavPanel({
+      onPrevQ:ci>0?()=>{wyrIdx=ci;patch({answers:{}});hostWYR();}:null,
+      onNextQ:wyrIdx<WYR_LIST.length?()=>hostWYR():null,
+      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+      onNextGame:()=>nextRound()
+    });
   });
 }
-
 // ── JEOPARDY ──
 let jepQ = null;
 function hostJeopardy() {
@@ -778,17 +779,19 @@ function jepDone() {
   else notify('Aún hay casillas disponibles');
 }
 
-// ── CONSPIRACY — 3 rounds ──
-function hostConspiracy() {
-  const s = gameState;
-  const idx = s.ccIndex || 0;
-  if (idx >= CONSPIRACY_LIST.length) { addNextBtn(); return; }
-  const q = CONSPIRACY_LIST[idx];
-  patch({ phase:'question', currentQ:q, answers:{}, ccIndex: idx });
+// CONSPIRACY - local ccIdx
+function hostConspiracy(){
+  if(ccIdx>=CONSPIRACY_LIST.length){
+    document.getElementById('game-body').innerHTML=`<div class="q-card fade"><div class="q-label" style="color:var(--purple)">Conspiracies completadas</div><p style="font-size:14px;color:var(--muted)">Usaste las ${CONSPIRACY_LIST.length} conspiraciones.</p></div>`;
+    showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    return;
+  }
+  const q=CONSPIRACY_LIST[ccIdx],ci=ccIdx;
+  patch({phase:'question',currentQ:q,answers:{}});
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label" style="color:var(--purple)">🛸 Conspiracy ${idx+1} de ${CONSPIRACY_LIST.length}</div>
+      <div class="q-label" style="color:var(--purple)">Conspiracy Corner ${ci+1} de ${CONSPIRACY_LIST.length}</div>
       <div style="background:#100a1f;border:1px solid #3a2060;border-radius:var(--r2);padding:14px;margin-bottom:10px"><p style="font-size:14px;line-height:1.7;color:#d4c4f0">${q.setup}</p></div>
       <div class="q-text">${q.q}</div>
       <div class="timer-bar"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
@@ -796,37 +799,32 @@ function hostConspiracy() {
       <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealConspiracy()">Revelar la verdad</button></div>
     </div>`;
   startTimerBar(25,'t-fill');
-  hostGetAI(`Conspiracy ${idx+1}: "${q.setup.substring(0,100)}". Actúa como si ya supieras la respuesta y estuvieras juzgando su ignorancia.`);
+  hostGetAI(`Conspiracy ${ci+1}: "${q.setup.substring(0,100)}". Actua como si ya supieras y estuvieras juzgando la ignorancia de todos.`);
 }
-
-function hostRevealConspiracy() {
-  const s=gameState, q=s.currentQ;
+function hostRevealConspiracy(){
+  const s=gameState,q=s.currentQ;if(!q)return;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=parseInt(v)===q.correct; if(w)ns[k]=(ns[k]||0)+150; return{k,v,w}; });
-  patch({ phase:'reveal', scores:ns });
-  const h=`<div class="reveal-card fade"><div style="font-size:12px;color:var(--purple);margin-bottom:6px">🛸 LA VERDAD</div><div class="reveal-answer" style="color:var(--gold);font-size:26px">${q.opts[q.correct]}</div><p style="font-size:13px;line-height:1.6;margin:10px 0">${q.reveal}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${q.opts[parseInt(v)]||'???'}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+150':'0'}</span></div>`).join('')}</div>`;
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=parseInt(v)===q.correct;if(w)ns[k]=(ns[k]||0)+150;return{k,v,w};});
+  patch({phase:'reveal',scores:ns});
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--purple);margin-bottom:6px">LA VERDAD</div><div class="reveal-answer" style="color:var(--gold);font-size:22px">${q.opts[q.correct]}</div><p style="font-size:13px;line-height:1.6;margin:10px 0">${q.reveal}</p>${rows.map(({k,v,w})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${q.opts[parseInt(v)]||'???'}</span></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+150':'0'}</span></div>`).join('')}</div>`);
   renderScoresBar(getState());
-  const nextIdx = (s.ccIndex||0) + 1;
-  const hasMore = nextIdx < CONSPIRACY_LIST.length;
-  hostGetAI(`La respuesta era "${q.opts[q.correct]}". ${rows.map(({k,v})=>`${PD[k].name}: "${q.opts[parseInt(v)]||'???'}"`).join(', ')}. Juzga su paranoia e inteligencia.`, () => {
-    if (hasMore) {
-      addContinueBtn(`→ Conspiracy ${nextIdx+1}`, () => {
-        patch({ ccIndex: nextIdx, answers:{} });
-        hostConspiracy();
-      });
-    } else {
-      addNextBtn();
-    }
+  saveHistory('conspiracy',ccIdx,q.q,rows);
+  const ci=ccIdx;ccIdx++;
+  hostGetAI(`CC${ci+1}: respuesta era "${q.opts[q.correct]}". ${rows.map(({k,v})=>`${PD[k].name}: "${q.opts[parseInt(v)]||'???'}"`).join(', ')}. Juzga su paranoia.`,()=>{
+    showNavPanel({
+      onPrevQ:ci>0?()=>{ccIdx=ci;patch({answers:{}});hostConspiracy();}:null,
+      onNextQ:ccIdx<CONSPIRACY_LIST.length?()=>hostConspiracy():null,
+      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+      onNextGame:()=>nextRound()
+    });
   });
 }
-
 // ── DESCRIBE IT — 3 turns, one per player, random order ──
 function hostDescribeRound() {
   const s = gameState;
-  const turn = s.descTurn || 0;
-  const order = s.playerOrder || ['felipe','rave','burns'];
-  if (turn >= 3) { addNextBtn(); return; }
+  const turn=descTurnLocal;
+  const order=gameState.playerOrder||['felipe','rave','burns'];
+  if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
   const drawer = order[turn];
   const word = DESCRIBE_WORDS[Math.floor(Math.random()*DESCRIBE_WORDS.length)];
   patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{} });
@@ -858,25 +856,18 @@ function hostRevealDescribe(success) {
   patch({ scores:ns, phase:'reveal' });
   document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">La palabra era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};margin-top:4px">${success?'✅ ¡Adivinaron!':'❌ Fracaso total'}</div></div>`);
   renderScoresBar(getState());
-  const nextTurn = (q.turn||0) + 1;
-  hostGetAI(`${success?'Adivinaron':'Nadie adivinó'} "${q.word}". ${PD[q.drawer].name} describió. Juzga brutalmente.`, () => {
-    if (nextTurn < 3) {
-      addContinueBtn(`→ Siguiente turno (${PD[(gameState.playerOrder||['felipe','rave','burns'])[nextTurn]]?.name})`, () => {
-        patch({ descTurn: nextTurn, answers:{} });
-        hostDescribeRound();
-      });
-    } else {
-      addNextBtn();
-    }
+  descTurnLocal++;
+  hostGetAI(`${success?'Adivinaron':'Nadie adivino'} la palabra. Juzga brutalmente.`,()=>{
+    showNavPanel({onNextQ:descTurnLocal<3?()=>{patch({answers:{}});hostDescribeRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
 // ── DRAW & DESTROY — 3 turns ──
 function hostDrawRound() {
   const s = gameState;
-  const turn = s.drawTurn || 0;
-  const order = s.playerOrder || ['felipe','rave','burns'];
-  if (turn >= 3) { addNextBtn(); return; }
+  const turn=drawTurnLocal;
+  const order=gameState.playerOrder||['felipe','rave','burns'];
+  if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
   const drawer = order[turn];
   const word = DRAW_WORDS[Math.floor(Math.random()*DRAW_WORDS.length)];
   patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{}, drawData:null });
@@ -908,16 +899,9 @@ function hostRevealDraw(success) {
   patch({ scores:ns, phase:'reveal' });
   document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">El dibujo era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};">${success?'✅ ¡Adivinaron!':'❌ Arte incomprendido'}</div></div>`);
   renderScoresBar(getState());
-  const nextTurn = (q.turn||0) + 1;
-  hostGetAI(`${PD[q.drawer].name} dibujó "${q.word}" y ${success?'lo adivinaron':'nadie lo entendió'}. Critica el arte como curador decepcionado.`, () => {
-    if (nextTurn < 3) {
-      addContinueBtn(`→ Siguiente turno (${PD[(gameState.playerOrder||['felipe','rave','burns'])[nextTurn]]?.name})`, () => {
-        patch({ drawTurn: nextTurn, answers:{}, drawData:null });
-        hostDrawRound();
-      });
-    } else {
-      addNextBtn();
-    }
+  drawTurnLocal++;
+  hostGetAI(`${PD[q.drawer]?.name} dibujo. Critica como curador decepcionado.`,()=>{
+    showNavPanel({onNextQ:drawTurnLocal<3?()=>{patch({answers:{},drawData:null});hostDrawRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
@@ -949,10 +933,11 @@ function hostRevealMemory() {
   hostGetAI(`Memory Mayhem. Ítems: ${items.map(m=>m.label).join(', ')}. Respuestas: ${Object.entries(s.answers||{}).map(([k,v])=>`${PD[k].name}: "${v.substring(0,40)}"`).join('; ')}. Juzga sus memorias de pez dorado.`);
 }
 
-function awardMem(k) {
-  const s=getState(); const ns={...s.scores}; ns[k]=(ns[k]||0)+200;
-  patch({ scores:ns }); renderScoresBar(getState()); notify(`${PD[k].name} +200 pts!`);
-  addNextBtn();
+function awardMem(k){
+  const s=getState();const ns={...s.scores};ns[k]=(ns[k]||0)+200;
+  patch({scores:ns});renderScoresBar(getState());notify(`${PD[k].name} +200 pts!`);
+  document.getElementById('next-btn')?.remove();
+  showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
 }
 
 // ── FINAL BOSS ──
@@ -962,7 +947,7 @@ function hostBoss() {
   document.getElementById('game-body').innerHTML=`
     <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertan. -100 si fallan. Puntos dobles.</div></div>
+      <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 solo al que acierte.</div></div>
       <div class="boss-question">${q.q}</div>
       <div class="timer-bar"><div class="timer-fill urgent" id="t-fill" style="width:100%"></div></div>
       <div class="ans-status" id="ans-chips"></div>
@@ -975,9 +960,9 @@ function hostBoss() {
 function hostRevealBoss() {
   const s=gameState, q=s.currentQ;
   const ns={...s.scores};
-  const rows=Object.entries(s.answers||{}).map(([k,v])=>{ const w=parseInt(v)===q.correct; const pts=w?300:-100; ns[k]=Math.max(0,(ns[k]||0)+pts); return{k,v,w,pts}; });
+  const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=parseInt(v)===q.correct;if(w)ns[k]=(ns[k]||0)+300;return{k,v,w};});
   patch({ scores:ns, phase:'reveal' });
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--red);margin-bottom:6px">RESPUESTA FINAL</div><div class="reveal-answer glow-gold">${q.opts[q.correct]}</div>${rows.map(({k,v,w,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><div><div class="pr-name">${PD[k].name}</div><div style="font-size:11px;color:var(--muted)">${q.roasts?.[k]||''}</div></div></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+300':'-100'}</span></div>`).join('')}</div>`);
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--red);margin-bottom:6px">RESPUESTA FINAL</div><div class="reveal-answer glow-gold">${q.opts[q.correct]}</div>${rows.map(({k,v,w,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><div><div class="pr-name">${PD[k].name}</div><div style="font-size:11px;color:var(--muted)">${q.roasts?.[k]||''}</div></div></div><span class="pr-pts ${w?'pts-win':'pts-lose'}">${w?'+300':'no suma'}</span></div>`).join('')}</div>`);
   renderScoresBar(getState());
   setTimeout(()=>hostEndGame(), 4000);
 }
@@ -1254,7 +1239,7 @@ function playerBoss(s) {
   if(s.answers?.[myKey]){ playerShowReveal(); return; }
   const q=s.currentQ; if(!q)return;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 si aciertas. -100 si fallas.</div></div>
+    <div style="text-align:center;padding:8px 0"><div class="boss-title glow-red">💀 FINAL BOSS</div><div class="boss-sub">+300 solo si aciertas.</div></div>
     <div class="boss-question">${q.q}</div>
     <div class="opts-2">${q.opts.map((o,i)=>`<button class="opt" onclick="playerAnswer('${i}')">${o}</button>`).join('')}</div>
     <div class="ans-status" id="ans-chips"></div></div>`;
