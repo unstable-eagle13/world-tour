@@ -542,6 +542,10 @@ function onStateUpdate(prev, s) {
       if (s.jepResponses && s.jepResponses.length !== (prev?.jepResponses?.length||0)) {
         updateJepResponses();
       }
+      // Sync new jeopardy question for host grid
+      if (s.currentQ && s.currentQ !== prev?.currentQ && ROUNDS[s.roundIndex]?.type === 'jeopardy') {
+        updateJepResponses();
+      }
     }
     return;
   }
@@ -569,6 +573,7 @@ function onStateUpdate(prev, s) {
   lastBuzzed     = s.buzzed;
 
   if (roundChanged || phaseChanged) {
+    _playerMemWarnItems = null; // reset so refresh triggers re-render
     if (s.phase === 'intro') { playerShowIntro(s); return; }
     if (s.phase === 'question') {
       const rt = ROUNDS[s.roundIndex]?.type;
@@ -581,9 +586,27 @@ function onStateUpdate(prev, s) {
     if (s.phase === 'chaos') { playerShowChaos(); return; }
   }
 
-  // currentQ arrived late
-  if (s.phase === 'question' && s.currentQ && prev && !prev.currentQ) {
-    playerShowQuestion(s); return;
+  // currentQ arrived late OR changed (new jeopardy question)
+  if (s.phase === 'question' && s.currentQ) {
+    if (!prev?.currentQ) { playerShowQuestion(s); return; }
+    // Jeopardy: new question picked by host
+    if (ROUNDS[s.roundIndex]?.type === 'jeopardy' &&
+        JSON.stringify(s.currentQ) !== JSON.stringify(prev?.currentQ)) {
+      playerJeopardy(s); return;
+    }
+  }
+
+  // Chaos: re-render when our click state changes
+  if (s.phase === 'chaos' &&
+      JSON.stringify(s.chaosClicks) !== JSON.stringify(prev?.chaosClicks)) {
+    playerShowChaos(); return;
+  }
+
+  // memItems changed mid-round (host refreshed symbols)
+  if (s.phase === 'question' && ROUNDS[s.roundIndex]?.type === 'mem_warn' &&
+      JSON.stringify(s.memItems) !== JSON.stringify(prev?.memItems)) {
+    _playerMemWarnItems = null;
+    playerMemWarn(s); return;
   }
 
   // Buzz order updated
@@ -687,7 +710,7 @@ function hostStartGame() {
   const playerKeys=shuffle(['felipe','rave','burns']);
   show('s-game');
   document.getElementById('host-pts-panel').style.display='block';
-  patch({gameStarted:true,roundIndex:0,phase:'intro',scores:{felipe:0,rave:0,burns:0},answers:{},buzzed:null,buzzOrder:[],jepUsed:{},jepResponses:[],drawData:null,currentQ:null,memItems,playerOrder:playerKeys,descTurn:0,drawTurn:0});
+  patch({gameStarted:true,roundIndex:0,phase:'intro',scores:{felipe:0,rave:0,burns:0},answers:{},buzzed:null,buzzOrder:[],jepUsed:{},jepResponses:[],drawData:null,currentQ:null,chaosAssignments:[],chaosClicks:{},memItems,playerOrder:playerKeys,descTurn:0,drawTurn:0});
   renderScoresBar({scores:{felipe:0,rave:0,burns:0}});
   hostRunRound(0);
 }
@@ -921,6 +944,7 @@ function hostPickJep(cat, pts) {
   jepQ = {...item, cat, key};
   // Send question to players, clear previous responses
   patch({ jepUsed:{...(s.jepUsed||{}),[key]:true}, currentQ:jepQ, answers:{}, jepResponses:[] });
+  _revealedJepResponses.clear();
   document.getElementById('jc-'+cat.replace(/\s/g,'_')+'-'+pts)?.classList.add('used');
   const area = document.getElementById('jep-q-area');
   if (area) area.innerHTML=`
@@ -951,19 +975,23 @@ function updateJepResponses() {
   // Update chips
   updateAnswerChips(s);
   // Show responses (hidden by default, click to reveal each)
-  board.innerHTML = responses.map((r, i) => `
-    <div id="jep-resp-${i}" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;gap:10px">
+  board.innerHTML = responses.map((r, i) => {
+    const isRevealed = _revealedJepResponses.has(i);
+    const ansEsc = r.ans.replace(/'/g,"\\'");
+    return `<div id="jep-resp-${i}" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;gap:10px">
       <span style="font-size:16px">${PD[r.k]?.emoji}</span>
       <span style="font-size:14px;font-weight:500;flex:1">${PD[r.k]?.name}</span>
-      <span id="jep-resp-text-${i}" style="font-size:13px;color:var(--dim);cursor:pointer" onclick="revealJepResponse(${i},'${r.ans.replace(/'/g,"\\'")}')">Oculta — clic para ver</span>
+      <span id="jep-resp-text-${i}" style="font-size:13px;color:${isRevealed?'var(--text)':'var(--dim)'};cursor:${isRevealed?'default':'pointer'}" ${isRevealed?'':`onclick="revealJepResponse(${i},'${ansEsc}')"`}>${isRevealed?r.ans:'Oculta — clic para ver'}</span>
       <button class="btn btn-green" style="padding:4px 12px;font-size:12px" onclick="judgeJepPlayer('${r.k}',true,${jepQ?.pts||100})">+${jepQ?.pts||100}</button>
       <button class="btn btn-red" style="padding:4px 12px;font-size:12px" onclick="judgeJepPlayer('${r.k}',false,${jepQ?.pts||100})">-50</button>
-    </div>`).join('');
+    </div>`;}).join('');
 }
 
+const _revealedJepResponses = new Set();
 function revealJepResponse(idx, answer) {
+  _revealedJepResponses.add(idx);
   const el = document.getElementById('jep-resp-text-'+idx);
-  if (el) { el.textContent = answer; el.style.color = 'var(--text)'; el.onclick = null; }
+  if (el) { el.textContent = answer; el.style.color = 'var(--text)'; el.style.cursor='default'; el.onclick = null; }
 }
 
 function revealJepAnswer(answer) {
@@ -1332,73 +1360,103 @@ const CHAOS_POINTS = [
   { name:'Puntos por Estilo', emoji:'😎' }
 ];
 
-function hostChaosRound() {
-  patch({ phase:'chaos', scores: gameState.scores });
-  const body = document.getElementById('game-body');
-  // Phase 1: Malfunction animation
-  body.innerHTML = `<div class="fade" style="text-align:center;padding:40px 20px">
-    <div id="glitch-title" style="font-family:'Bebas Neue',sans-serif;font-size:60px;color:var(--red);animation:glitch 0.3s infinite">CARGANDO PODIO...</div>
-    <p style="color:var(--muted);font-size:14px;margin-top:8px">Por favor espere...</p>
-  </div>`;
-  document.getElementById('gb-round').textContent = 'BONUS';
-
-  // Simulate malfunction after 2s
-  setTimeout(() => {
-    body.innerHTML = `<div class="fade" style="text-align:center;padding:20px 0">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);margin-bottom:6px">⚠️ ERROR DEL SISTEMA ⚠️</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--gold);margin-bottom:8px">LIGHTNING ROUND</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px">El sistema ha detectado irregularidades. Se procederá a distribución de puntos de emergencia.</p>
-      <div id="chaos-area"></div>
-    </div>`;
-    runChaosDistribution();
-  }, 2500);
+// Build guaranteed distribution: each player gets at least 1 prize
+// 5 prizes total for 3 players: distribute as [2,2,1] shuffled
+function buildChaosAssignments() {
+  const players = ['felipe', 'rave', 'burns'];
+  const shuffledPts = [...CHAOS_POINTS].sort(()=>Math.random()-0.5).slice(0,5);
+  // Guarantee each player gets at least 1
+  const shuffledPlayers = [...players].sort(()=>Math.random()-0.5);
+  const assignments = [];
+  // First 3: one each
+  for (let i=0;i<3;i++) assignments.push({ player: shuffledPlayers[i], pt: shuffledPts[i] });
+  // Last 2: random
+  for (let i=3;i<5;i++) assignments.push({ player: players[Math.floor(Math.random()*3)], pt: shuffledPts[i] });
+  // Shuffle final order for drama
+  return assignments.sort(()=>Math.random()-0.5);
 }
 
-function runChaosDistribution() {
-  // Pick 5 random chaos point types
-  const shuffled = [...CHAOS_POINTS].sort(() => Math.random() - 0.5).slice(0, 5);
-  const players = ['felipe', 'rave', 'burns'];
-  const area = document.getElementById('chaos-area');
+function hostChaosRound() {
+  const assignments = buildChaosAssignments();
+  // Store assignments in state so players can react
+  patch({ phase:'chaos', chaosStep:'download', chaosAssignments: assignments, chaosClicks:{} });
+  document.getElementById('gb-round').textContent = 'BONUS';
 
-  shuffled.forEach((pt, i) => {
-    setTimeout(() => {
-      // Pick random winner
-      const winner = players[Math.floor(Math.random() * 3)];
-      const pts = Math.floor(Math.random() * 200) + 50; // 50-250 random points
-      const ns = {...gameState.scores};
-      ns[winner] = (ns[winner] || 0) + pts;
-      patch({ scores: ns });
+  const body = document.getElementById('game-body');
+  // Host sees glitch → then progress panel
+  body.innerHTML = `<div class="fade" style="text-align:center;padding:30px 20px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--red);animation:glitch 0.3s infinite">CARGANDO PODIO...</div>
+    <p style="color:var(--muted);font-size:14px;margin-top:8px">Por favor espere...</p>
+  </div>`;
 
-      // Show roulette spin then reveal
-      const row = document.createElement('div');
-      row.style.cssText = 'background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;margin-bottom:8px;text-align:center';
-      row.innerHTML = `<div style="font-size:14px;color:var(--muted);margin-bottom:6px">${pt.emoji} ${pt.name}</div>
-        <div class="roulette-spin" id="roulette-${i}" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--orange)">🎰 girando...</div>`;
-      area.appendChild(row);
-
-      // Spin animation then reveal
-      let spinCount = 0;
-      const spinInterval = setInterval(() => {
-        const randomPlayer = players[Math.floor(Math.random() * 3)];
-        const el = document.getElementById('roulette-'+i);
-        if (el) el.textContent = PD[randomPlayer].emoji + ' ' + PD[randomPlayer].name + '...';
-        spinCount++;
-        if (spinCount > 8) {
-          clearInterval(spinInterval);
-          const el2 = document.getElementById('roulette-'+i);
-          if (el2) el2.innerHTML = `<span style="color:var(--gold)">${PD[winner].emoji} ${PD[winner].name} +${pts} pts</span>`;
-          // AI comment after a delay
-          if (i === shuffled.length - 1) {
-            setTimeout(() => {
-              hostGetAI(`Se acaba de completar la Lightning Round secreta del World Tour. Se repartieron puntos de emergencia incluyendo categorias como "${shuffled.map(p=>p.name).join('", "')}". Los ganadores fueron aleatorios. Comenta de forma brutal y personal sobre cada jugador que recibio puntos caoticos. Usa lo que sabes de cada uno para que el comentario sea devastadoramente personal.`, () => {
-                setTimeout(() => hostEndGame(), 4000);
-              });
-            }, 800);
-          }
-        }
-      }, 150);
-    }, i * 1800);
-  });
+  setTimeout(()=>{
+    body.innerHTML = `<div class="fade" style="display:flex;flex-direction:column;gap:14px">
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red)">ALERTA DE VIRUS DETECTADO</div>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px">Los jugadores deben completar el proceso de instalacion...</p>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;letter-spacing:.08em;text-transform:uppercase">Progreso de dominacion global</div>
+        <div style="background:var(--s3);border-radius:3px;height:12px;overflow:hidden;margin-bottom:6px">
+          <div id="chaos-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--red),var(--gold));border-radius:3px;transition:width 0.5s ease"></div>
+        </div>
+        <div id="chaos-progress-text" style="font-size:12px;color:var(--muted);text-align:center">0 / 3 jugadores infectados</div>
+      </div>
+      <div id="chaos-results" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div id="chaos-final-btn" style="display:none">
+        <div id="chaos-host-bubble" class="host-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+      </div>
+    </div>`;
+    // Poll for clicks
+    const pollId = setInterval(()=>{
+      const s = gameState;
+      const clicks = s.chaosClicks || {};
+      const clicked = Object.keys(clicks).filter(k=>clicks[k]==='revealed');
+      const pct = (clicked.length/3*100);
+      const bar = document.getElementById('chaos-progress-bar');
+      const txt = document.getElementById('chaos-progress-text');
+      if (bar) bar.style.width = pct+'%';
+      if (txt) txt.textContent = `${clicked.length} / 3 jugadores infectados`;
+      // Show result for each player who clicked
+      const results = document.getElementById('chaos-results');
+      if (results) {
+        const assignments = s.chaosAssignments||[];
+        results.innerHTML = clicked.map(k=>{
+          const playerAssignments = assignments.filter(a=>a.player===k);
+          return playerAssignments.map(a=>`
+            <div class="reveal-card fade" style="border-color:var(--gold)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:24px">${PD[k].emoji}</span>
+                <div>
+                  <div style="font-weight:600;font-size:15px">${PD[k].name}</div>
+                  <div style="font-size:13px;color:var(--gold)">${a.pt.emoji} ${a.pt.name}</div>
+                </div>
+                <div style="margin-left:auto;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)">+${Math.floor(Math.random()*150)+75} pts</div>
+              </div>
+            </div>`).join('');
+        }).join('');
+      }
+      // All 3 clicked
+      if (clicked.length >= 3) {
+        clearInterval(pollId);
+        // Apply points from assignments
+        const ns = {...s.scores};
+        const allAssignments = s.chaosAssignments||[];
+        allAssignments.forEach(a=>{
+          const pts = Math.floor(Math.random()*150)+75;
+          ns[a.player] = (ns[a.player]||0)+pts;
+        });
+        patch({scores:ns});
+        renderScoresBar(getState());
+        const finalBtn = document.getElementById('chaos-final-btn');
+        if (finalBtn) finalBtn.style.display='block';
+        const descList = allAssignments.map(a=>`${PD[a.player].name} recibio ${a.pt.name}`).join(', ');
+        hostGetAI(`Lightning Round completada. Los jugadores descargaron el virus y recibieron: ${descList}. Haz el comentario final mas devastador y personal de todo el juego. Usa lo que sabes de cada jugador y los puntos que recibieron para destruirlos individualmente.`, ()=>{
+          setTimeout(()=>hostEndGame(), 5000);
+        });
+      }
+    }, 800);
+  }, 2500);
 }
 
 // ── END GAME — reveal worst to best, plane animation ──
@@ -1510,11 +1568,71 @@ function playerShowEnd(s) {
 
 function playerShowChaos() {
   document.getElementById('gb-round').textContent = 'BONUS';
-  document.getElementById('game-body').innerHTML=`<div class="fade" style="text-align:center;padding:40px 20px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--gold);margin-bottom:8px">LIGHTNING ROUND</div>
-    <p style="font-size:14px;color:var(--muted)">El sistema ha detectado irregularidades...</p>
-    <div class="dots" style="justify-content:center;display:flex;margin-top:16px"><span></span><span></span><span></span></div>
-  </div>`;
+  const s = gameState;
+  const clicks = s.chaosClicks || {};
+  const myClick = clicks[myKey];
+
+  if (!myClick) {
+    // Step 1: Show download button
+    document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:28px 20px">
+      <div style="font-size:48px;margin-bottom:12px">📦</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);margin-bottom:8px">NUEVO MENSAJE</div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;text-align:left">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">De: WorldTour-System@realgame.com</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">Tu pack gratuito de Felipollo esta listo</div>
+        <div style="font-size:13px;color:var(--muted)">Haz click abajo para descargar tu pack personalizado de WorldTour. Contiene sorpresas especiales para ti.</div>
+      </div>
+      <button class="btn btn-gold btn-block btn-xl" onclick="chaosStep1()" style="background:var(--gold);color:#000;padding:16px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:22px;width:100%">
+        Descargar pack de Felipollo
+      </button>
+    </div>`;
+  } else if (myClick === 'step1') {
+    // Step 2: Infection message
+    document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:28px 20px">
+      <div style="font-size:64px;margin-bottom:12px">😿</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);margin-bottom:8px">La curiosidad mato al gato</div>
+      <div style="background:#1f0a0a;border:1px solid var(--red);border-radius:var(--r);padding:14px;margin-bottom:16px">
+        <div style="font-size:14px;color:var(--red);font-weight:600;margin-bottom:6px">El virus ha sido instalado correctamente</div>
+        <div style="font-family:'DM Sans',monospace;font-size:11px;color:var(--muted);line-height:1.8">
+          > Scanning files...<br>
+          > Access granted<br>
+          > Uploading to servidor_supremo.exe<br>
+          > Installation: COMPLETE
+        </div>
+      </div>
+      <button class="btn btn-red btn-block" onclick="chaosStep2()" style="padding:14px;border-radius:var(--r);border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;background:var(--red);color:#fff;width:100%">
+        Click aqui para revelar de que se trata
+      </button>
+    </div>`;
+  } else if (myClick === 'revealed') {
+    // Step 3: Show their chaos points
+    const assignments = s.chaosAssignments || [];
+    const mine = assignments.filter(a=>a.player===myKey);
+    document.getElementById('game-body').innerHTML=`<div class="fade q-card" style="text-align:center;padding:24px 20px">
+      <div style="font-size:48px;margin-bottom:10px">🎪</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);margin-bottom:14px">TUS PUNTOS SECRETOS</div>
+      ${mine.map(a=>`
+        <div style="background:var(--s2);border:1px solid var(--gold);border-radius:var(--r);padding:16px;margin-bottom:10px">
+          <div style="font-size:32px;margin-bottom:6px">${a.pt.emoji}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold)">${a.pt.name}</div>
+        </div>`).join('')}
+      <p style="font-size:13px;color:var(--muted);margin-top:10px">Los puntos se suman al final.</p>
+    </div>`;
+  }
+}
+
+function chaosStep1() {
+  const s = gameState;
+  const clicks = {...(s.chaosClicks||{})};
+  clicks[myKey] = 'step1';
+  setKey('chaosClicks', clicks);
+}
+
+function chaosStep2() {
+  const s = gameState;
+  const clicks = {...(s.chaosClicks||{})};
+  clicks[myKey] = 'revealed';
+  setKey('chaosClicks', clicks);
 }
 function playerShowQuestion(s) {
   const t = ROUNDS[s.roundIndex]?.type;
@@ -1529,8 +1647,14 @@ function playerShowQuestion(s) {
   else if(t==='boss')       playerBoss(s);
 }
 
+let _playerMemWarnItems = null;
 function playerMemWarn(s) {
   const items = s.memItems || MEMORY_POOLS[0];
+  // If items changed (host refreshed), re-render
+  const itemsStr = JSON.stringify(items);
+  const needsRerender = _playerMemWarnItems !== itemsStr;
+  _playerMemWarnItems = itemsStr;
+  if (!needsRerender && document.getElementById('mw-fill')) return; // already showing, don't restart
   let t=30;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
     <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:8px">👁️</div>
@@ -1568,11 +1692,19 @@ function playerWYR(s) {
   updateAnswerChips(s);
 }
 
+let _playerJepQKey = null;
 function playerJeopardy(s) {
   const q=s.currentQ;
   if(!q){
+    _playerJepQKey = null;
     document.getElementById('game-body').innerHTML=`<div class="q-card fade" style="text-align:center;padding:28px 20px"><div style="font-size:40px;margin-bottom:10px">🔔</div><div class="display" style="font-size:26px;color:var(--orange)">JEOPARDY</div><p style="font-size:14px;color:var(--muted);margin-top:8px">El host elige una pregunta...</p></div>`;
     return;
+  }
+  // Detect new question — always re-render
+  const qKey = q.cat + '_' + q.pts;
+  if (qKey !== _playerJepQKey) {
+    _playerJepQKey = qKey;
+    // Force full re-render for new question
   }
   // Check if I already submitted a response for this question
   const responses = s.jepResponses || [];
