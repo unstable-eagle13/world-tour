@@ -5,7 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>WORLD TOUR 🌍</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="/socket.io/socket.io.js"></script>
+<script>
+// Load socket.io — try local server path first, fall back to CDN
+(function() {
+  function loadScript(src, cb) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = cb;
+    s.onerror = function() {
+      // Local failed, try CDN
+      var s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js';
+      s2.onload = cb;
+      s2.onerror = function() {
+        document.getElementById('conn-status').innerHTML =
+          '<span style="color:#ff2d55">⚠ Error: no se pudo conectar. Recarga la página.</span>';
+      };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  }
+  window._socketIoReady = new Promise(function(resolve) {
+    loadScript('/socket.io/socket.io.js', resolve);
+  });
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -330,7 +354,7 @@ const WYR_LIST = [
 
 // 5 real conspiracy theories
 const CONSPIRACY_LIST = [
-  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974 para vigilar a la ciudadanía. La evidencia clave: nunca se ven palomas bebé, y cuando mueren desaparecen antes de que alguien las encuentre.', q:'¿Quién está detrás de la conspiración de las palomas?', opts:['La CIA y el KGB en alianza secreta post-Guerra Fría','Nixon lo ordenó antes de renunciar como último acto de paranoia','Los fabricantes de migas de pan para controlar la economía urbana','Las palomas reales existen pero están en instalaciones secretas'], correct:1, reveal:'La teoría Birds Aren't Real fue iniciada por Peter McIndoe en 2017. Nixon habría ordenado el exterminio de todas las aves en EEUU y las reemplazó con drones. Tiene millones de seguidores y marchas organizadas. La ausencia de palomas bebé es su evidencia estrella. McIndoe confesó en 2022 que era sátira... pero los creyentes no le creyeron.' },
+  { setup:'Las palomas no son aves reales. Son drones del gobierno instalados desde 1974 para vigilar a la ciudadanía. La evidencia clave: nunca se ven palomas bebé, y cuando mueren desaparecen antes de que alguien las encuentre.', q:'¿Quién está detrás de la conspiración de las palomas?', opts:['La CIA y el KGB en alianza secreta post-Guerra Fría','Nixon lo ordenó antes de renunciar como último acto de paranoia','Los fabricantes de migas de pan para controlar la economía urbana','Las palomas reales existen pero están en instalaciones secretas'], correct:1, reveal:'La teoría Birds Aren\'t Real fue iniciada por Peter McIndoe en 2017. Nixon habría ordenado el exterminio de todas las aves en EEUU y las reemplazó con drones. Tiene millones de seguidores y marchas organizadas. La ausencia de palomas bebé es su evidencia estrella. McIndoe confesó en 2022 que era sátira... pero los creyentes no le creyeron.' },
   { setup:'El Proyecto MKUltra fue un programa REAL y confirmado por el Congreso en 1977. La CIA experimentó con LSD y otras sustancias en ciudadanos sin su consentimiento desde los años 50. Lo que los teoristas afirman es que nunca terminó: simplemente se volvió más sofisticado.', q:'¿Cuál es la versión moderna del MKUltra según los teoristas?', opts:['El fluoruro en el agua potable que suprime el pensamiento crítico','Los teléfonos celulares que emiten ondas de control emocional','Las redes sociales diseñadas como experimentos de manipulación de masas','Todas son señaladas actualmente como continuaciones del programa'], correct:3, reveal:'Las tres son citadas por teoristas serios. Lo perturbador: Facebook realizó en 2014 un experimento de manipulación emocional en 700,000 usuarios sin su consentimiento — y lo admitió. El fluoruro en agua sigue siendo tema de debate científico real. Y los documentos de MKUltra desclasificados muestran experimentos mucho más oscuros que los reportados inicialmente.' },
   { setup:'La Matanza de Jonestown en 1978 fue presentada como suicidio masivo de 918 personas en Guyana. Pero el 70% de las víctimas tenían marcas de inyección en la espalda — un lugar imposible de alcanzar uno mismo. El Congresista Leo Ryan, que iba a investigar los vínculos con la CIA, fue asesinado días antes.', q:'¿Qué era realmente Jonestown según los teoristas?', opts:['Un experimento de control mental de la CIA relacionado con MKUltra','Una base de entrenamiento para agentes soviéticos en América Latina','Un laboratorio de armas biológicas disfrazado de comunidad religiosa','Un experimento para estudiar el colapso de civilizaciones aisladas'], correct:0, reveal:'La conexión CIA-Jonestown tiene décadas de investigación seria. Jim Jones tenía vínculos documentados con figuras de inteligencia. Las marcas en las espaldas, la destrucción inmediata del sitio por militares, y el silenciamiento de sobrevivientes son puntos sin resolver oficialmente. Los documentos desclasificados confirman que la CIA monitoreaba el Templo del Pueblo — nunca explicaron por qué.' },
   { setup:'Paul McCartney murió en un accidente de auto en noviembre de 1966 y fue reemplazado por un doble. Los Beatles insertaron mensajes en sus canciones anunciando la muerte. En la portada de Abbey Road, Paul camina descalzo y fuera de paso. En Revolution 9 al revés se escucha "Turn me on, dead man". Y en Sgt. Pepper hay flores formando el número 28IF — la edad que tendría si viviera.', q:'¿Cuál es la razón más oscura que dan los teoristas para mantener el secreto?', opts:['El sello discográfico Capitol no quería perder su inversión de millones de dólares','El gobierno británico temía que la noticia desestabilizara la economía','Los propios Beatles habían firmado contratos que los hacían responsables de la muerte','Porque el reemplazo Billy Shears chantajeó a los tres Beatles sobrevivientes'], correct:1, reveal:'La teoría Paul is Dead tiene millones de seguidores. La versión del "gobierno británico" sostiene que MI5 ordenó el encubrimiento porque la muerte de McCartney hubiera colapsado la industria del entretenimiento del Reino Unido. Paul McCartney eventualmente grabó un álbum titulado "Paul is Live" parodiando Abbey Road. Los tres otros Beatles nunca lo desmintieron directamente durante años.' },
@@ -376,7 +400,53 @@ const FINAL_BOSS_LIST = [
 // ═══════════════════════════════════════════
 //   SOCKET + STATE
 // ═══════════════════════════════════════════
-const socket = io();
+// Wait for socket.io to be ready before initializing
+// This prevents 'io is not defined' if server is waking up from sleep
+let socket;
+let _ioReady = false;
+
+function initSocket() {
+  try {
+    socket = io({
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+      timeout: 20000
+    });
+    _ioReady = true;
+
+    socket.on('connect', () => {
+      document.getElementById('conn-dot').classList.add('on');
+      document.getElementById('conn-status').innerHTML='<span class="conn-dot on"></span>Conectado';
+    });
+    socket.on('disconnect', () => {
+      document.getElementById('conn-dot').classList.remove('on');
+      document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...';
+    });
+    socket.on('state', s => {
+      const prev = gameState; gameState = s;
+      if (!_firstStateReceived) {
+        _firstStateReceived = true;
+        if (_savedRole && _savedKey && s.gameStarted) {
+          showReconnectBanner(_savedRole, _savedKey, s);
+        }
+      }
+      if (myRole && (document.getElementById('s-game').classList.contains('on') ||
+                      document.getElementById('s-host').classList.contains('on'))) {
+        onStateUpdate(prev, s); return;
+      }
+      if (myRole === 'player' && document.getElementById('s-player-wait').classList.contains('on')) {
+        onStateUpdate(prev, s); return;
+      }
+      if (myRole) onStateUpdate(prev, s);
+    });
+  } catch(e) {
+    document.getElementById('conn-status').innerHTML =
+      '<span style="color:var(--red)">Error de conexión. Recarga la página.</span>';
+    console.error('Socket init failed:', e);
+  }
+}
+
 // myRole/myKey: set when user picks their role. Persisted in sessionStorage
 // so screen lock doesn't log them out. But NOT auto-applied until user
 // explicitly taps "Reconectar" or selects a role.
@@ -402,42 +472,7 @@ function clearSession() {
   sessionStorage.removeItem('wt_key');
 }
 
-socket.on('connect', () => {
-  document.getElementById('conn-dot').classList.add('on');
-  document.getElementById('conn-status').innerHTML='<span class="conn-dot on"></span>Conectado';
-});
-socket.on('disconnect', () => {
-  document.getElementById('conn-dot').classList.remove('on');
-  document.getElementById('conn-status').innerHTML='<span class="conn-dot"></span>Reconectando...';
-});
-socket.on('state', s => {
-  const prev = gameState; gameState = s;
-
-  // On first state received: if we have a saved session AND game is running,
-  // show a reconnect banner — let user decide, don't auto-hijack the screen
-  if (!_firstStateReceived) {
-    _firstStateReceived = true;
-    if (_savedRole && _savedKey && s.gameStarted) {
-      showReconnectBanner(_savedRole, _savedKey, s);
-    }
-  }
-
-  // If user has already chosen their role and is in-game, keep syncing
-  if (myRole && (document.getElementById('s-game').classList.contains('on') ||
-                  document.getElementById('s-host').classList.contains('on'))) {
-    onStateUpdate(prev, s);
-    return;
-  }
-
-  // If user is in the waiting room, keep syncing too
-  if (myRole === 'player' && document.getElementById('s-player-wait').classList.contains('on')) {
-    onStateUpdate(prev, s);
-    return;
-  }
-
-  // Otherwise just update gameState silently (needed for player-select to show taken slots)
-  if (myRole) onStateUpdate(prev, s);
-});
+// Socket handlers are set up in initSocket()
 
 function showReconnectBanner(role, key, s) {
   // Show a subtle banner at the top of entry screen
@@ -477,8 +512,8 @@ function doReconnect(role, key) {
   }
 }
 
-function patch(data) { socket.emit('patch', data); }
-function setKey(key, value) { socket.emit('set', { key, value }); }
+function patch(data) { if(socket && _ioReady) socket.emit('patch', data); else console.warn('Socket not ready'); }
+function setKey(key, value) { if(socket && _ioReady) socket.emit('set', { key, value }); else console.warn('Socket not ready'); }
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
 // ═══════════════════════════════════════════
@@ -1484,6 +1519,17 @@ Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas
 //   UI UTILS
 // ═══════════════════════════════════════════
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
+
+// Initialize socket after DOM is ready and socket.io library is loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window._socketIoReady) window._socketIoReady.then(initSocket);
+    else initSocket();
+  });
+} else {
+  if (window._socketIoReady) window._socketIoReady.then(initSocket);
+  else initSocket();
+}
 function getState(){return gameState||{};}
 function notify(msg,dur=3000){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.getElementById('notif-area').appendChild(el);setTimeout(()=>el.remove(),dur);}
 function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el&&idx>=0&&idx<ROUNDS.length)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
