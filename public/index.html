@@ -247,6 +247,10 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 @keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
 .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block;margin-right:6px}
 .conn-dot.on{background:var(--green)}
+.pts-panel{position:fixed;bottom:16px;right:16px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;z-index:50;display:flex;flex-direction:column;gap:8px;min-width:200px;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.pts-panel-title{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.pts-row{display:flex;align-items:center;gap:6px}
+.pts-name{font-size:13px;flex:1;font-weight:500}
 </style>
 </head>
 <body>
@@ -308,6 +312,11 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
     <div class="gb-timer" id="gb-timer">–</div>
   </div>
   <div class="game-body" id="game-body"></div>
+</div>
+<!-- HOST POINTS PANEL -->
+<div id="host-pts-panel" class="pts-panel" style="display:none">
+  <div class="pts-panel-title">Ajustar puntos</div>
+  <div id="pts-rows"></div>
 </div>
 
 <div id="notif-area"></div>
@@ -529,8 +538,9 @@ function onStateUpdate(prev, s) {
       if (s.drawData && document.getElementById('drawing-preview')) {
         document.getElementById('drawing-preview').innerHTML = `<img src="${s.drawData}" style="width:100%;border-radius:var(--r2)">`;
       }
-      if (s.buzzOrder && JSON.stringify(s.buzzOrder) !== JSON.stringify(prev?.buzzOrder)) {
-        renderBuzzBoard(s.buzzOrder);
+      // Sync jeopardy responses for host
+      if (s.jepResponses && s.jepResponses.length !== (prev?.jepResponses?.length||0)) {
+        updateJepResponses();
       }
     }
     return;
@@ -590,12 +600,7 @@ function onStateUpdate(prev, s) {
     return;
   }
 
-  // Buzz reset
-  if (s.buzzOrder?.length === 0 && prev?.buzzOrder?.length > 0) {
-    const bb = document.getElementById('buzz-button');
-    if (bb) { bb.disabled = false; bb.textContent = '¡BUZZ!'; }
-    return;
-  }
+  // jeopardy now uses text input, no buzz needed
 
   updateAnswerChips(s);
 }
@@ -643,6 +648,28 @@ function confirmPlayerJoin() {
 // ═══════════════════════════════════════════
 //   HOST PANEL
 // ═══════════════════════════════════════════
+function renderPtsPanel() {
+  const panel = document.getElementById('host-pts-panel');
+  const rows = document.getElementById('pts-rows');
+  if (!panel || !rows || myRole !== 'host') return;
+  const s = getState();
+  rows.innerHTML = Object.entries(PD).map(([k,p]) => `
+    <div class="pts-row">
+      <span class="pts-name">${p.emoji} ${p.name}</span>
+      <button onclick="adjustPts('${k}',-100)" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--red);color:#fff;font-size:13px;font-weight:600">-100</button>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--orange);min-width:36px;text-align:center">${s.scores?.[k]||0}</span>
+      <button onclick="adjustPts('${k}',100)" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;background:var(--green);color:#000;font-size:13px;font-weight:600">+100</button>
+    </div>`).join('');
+}
+
+function adjustPts(playerKey, delta) {
+  const s = getState();
+  const ns = {...s.scores};
+  ns[playerKey] = Math.max(0, (ns[playerKey]||0) + delta);
+  patch({scores: ns});
+  notify(`${PD[playerKey].emoji} ${delta>0?'+'+delta:delta} pts`);
+}
+
 function updateHostPanel(s) {
   const pEl=document.getElementById('hp-players');
   if(pEl) pEl.innerHTML=Object.entries(PD).map(([k,p])=>`<div class="score-row"><div class="sr-emoji">${p.emoji}</div><div class="sr-name">${p.name} <span style="font-size:11px;color:var(--muted)">${p.city}</span></div><div style="font-size:12px;color:${s.joined?.[k]?'var(--green)':'var(--dim)'}">${s.joined?.[k]?'✓ Conectado':'Esperando'}</div></div>`).join('');
@@ -659,7 +686,8 @@ function hostStartGame() {
   const memItems=MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
   const playerKeys=shuffle(['felipe','rave','burns']);
   show('s-game');
-  patch({gameStarted:true,roundIndex:0,phase:'intro',scores:{felipe:0,rave:0,burns:0},answers:{},buzzed:null,buzzOrder:[],jepUsed:{},drawData:null,currentQ:null,memItems,playerOrder:playerKeys,descTurn:0,drawTurn:0});
+  document.getElementById('host-pts-panel').style.display='block';
+  patch({gameStarted:true,roundIndex:0,phase:'intro',scores:{felipe:0,rave:0,burns:0},answers:{},buzzed:null,buzzOrder:[],jepUsed:{},jepResponses:[],drawData:null,currentQ:null,memItems,playerOrder:playerKeys,descTurn:0,drawTurn:0});
   renderScoresBar({scores:{felipe:0,rave:0,burns:0}});
   hostRunRound(0);
 }
@@ -672,7 +700,7 @@ function hostRunRound(idx){
   const rtype=ROUNDS[idx].type;
   if(rtype==='hot_takes')htIdx=0;if(rtype==='wyr')wyrIdx=0;
   if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe')descTurnLocal=0;if(rtype==='draw')drawTurnLocal=0;
-  patch({roundIndex:idx,phase:'intro',answers:{},buzzed:null,buzzOrder:[],currentQ:null,drawData:null});
+  patch({roundIndex:idx,phase:'intro',answers:{},buzzed:null,buzzOrder:[],jepResponses:[],currentQ:null,drawData:null});
   updateRoundBadge(idx);
   const r=ROUNDS[idx];
   document.getElementById('game-body').innerHTML=`<div class="round-intro fade">
@@ -712,18 +740,55 @@ function navJumpTo(idx){hostRunRound(idx);}
 function saveHistory(t,i,q,r){if(!roundHistory[t])roundHistory[t]=[];roundHistory[t][i]={q,r};}
 // ── MEMORY WARNING ──
 function hostMemWarn() {
-  patch({ phase:'question', currentQ:null, answers:{} });
-  const items = gameState.memItems || MEMORY_POOLS[0];
+  const poolIdx = MEMORY_POOLS.findIndex(p => JSON.stringify(p) === JSON.stringify(gameState.memItems));
+  renderMemWarnScreen(gameState.memItems || MEMORY_POOLS[0]);
+}
+
+function renderMemWarnScreen(items) {
+  patch({ phase:'question', currentQ:null, answers:{}, memItems: items });
   let t = 30;
+  let timerRunning = true;
   document.getElementById('game-body').innerHTML = `<div class="q-card fade">
-    <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:10px">👁️</div>
-    <div class="display" style="font-size:26px;color:var(--red);margin-bottom:8px">PONGAN ATENCIÓN</div>
-    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px">Memoricen estos 6 ítems. Tienen <strong style="color:var(--orange)">30 segundos</strong>. No diremos por qué.</p></div>
-    <div class="mem-grid">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:48px;margin-bottom:10px">👁️</div>
+      <div class="display" style="font-size:26px;color:var(--red);margin-bottom:8px">PONGAN ATENCIÓN</div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:16px">Memoricen estos 6 ítems. Tienen <strong style="color:var(--orange)">30 segundos</strong>.</p>
+    </div>
+    <div class="mem-grid" id="mw-items-grid">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
     <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
+    <div class="host-controls" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="refreshMemItems()" style="font-size:12px">↺ Cambiar símbolos</button>
+    </div>
   </div>`;
-  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0){clearInterval(iv);hostGetAI('Los jugadores acaban de ver los items de memoria. Amenazalos de forma criptica y oscura. Que no sepan que viene.',()=>{showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});});} },1000);
+  const iv = setInterval(()=>{
+    t--;
+    const f=document.getElementById('mw-fill'), cd=document.getElementById('mw-cd');
+    if(f) f.style.width=(t/30*100)+'%';
+    if(cd) cd.textContent=t+'s';
+    if(t<=0){
+      clearInterval(iv);
+      hostGetAI('Los jugadores acaban de ver los items de memoria. Amenazalos de forma criptica y oscura.',()=>{
+        showNavPanel({
+          onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+          onNextGame:()=>nextRound()
+        });
+      });
+    }
+  }, 1000);
+}
+
+function refreshMemItems() {
+  // Pick a different pool than current
+  const currentStr = JSON.stringify(gameState.memItems);
+  let newPool = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
+  // Try to get a different one
+  for(let i=0; i<10; i++) {
+    if(JSON.stringify(newPool) !== currentStr) break;
+    newPool = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
+  }
+  renderMemWarnScreen(newPool);
+  notify('Símbolos actualizados');
 }
 
 // HOT TAKES - local htIdx
@@ -796,14 +861,15 @@ function hostRevealWYR(){
   const votesA=Object.values(answers).filter(v=>v==='A').length;
   const votesB=Object.values(answers).filter(v=>v==='B').length;
   const total=votesA+votesB;
-  // Scoring: majority (more than half) = 100pts, all same = 75pts, alone = 50pts
+  // 2 scenarios with 3 players: 2 agree = majority gets +100, lone gets 0
+  //                               3 agree = all get +75
   const rows=Object.entries(answers).map(([k,v])=>{
     const sameCount=v==='A'?votesA:votesB;
     let pts=0;
     if(total===0) pts=0;
-    else if(sameCount===total) pts=75;   // all 3 chose same
-    else if(sameCount>total/2) pts=100;  // majority (2 of 3)
-    else pts=50;                          // alone (1 of 3)
+    else if(sameCount===total) pts=75;   // all 3 chose same → +75 each
+    else if(sameCount>=2) pts=100;       // majority 2 of 3 → +100
+    else pts=0;                           // lone one → 0
     ns[k]=(ns[k]||0)+pts;
     return{k,v,pts};
   });
@@ -814,7 +880,7 @@ function hostRevealWYR(){
     <div style="font-size:12px;color:var(--muted);margin-bottom:6px">LO QUE ELIGIERON</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Mayoria: <strong style="color:var(--text)">${majorityText}</strong></div>
     ${rows.map(({k,v,pts})=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v==='A'?'A) '+q.a.substring(0,40)+'...':'B) '+q.b.substring(0,40)+'...'}</span></div><span class="pr-pts ${pts>0?'pts-win':'pts-lose'}">+${pts}</span></div>`).join('')}
-    <div style="font-size:11px;color:var(--dim);margin-top:8px">Mayoria (2/3): +100 pts · Todos igual: +75 pts · Solo (1/3): +50 pts</div>
+    <div style="font-size:11px;color:var(--dim);margin-top:8px">Mayoria (2/3): +100 pts cada uno · Todos igual: +75 pts cada uno · Solo: 0 pts</div>
   </div>`);
   renderScoresBar(getState());
   saveHistory('wyr',wyrIdx,q.a+'/'+q.b,rows);
@@ -833,19 +899,19 @@ let jepQ = null;
 function hostJeopardy() {
   const cats = Object.keys(JEOPARDY_DATA);
   const s = gameState;
-  patch({ phase:'question', currentQ:null, answers:{}, buzzOrder:[] });
+  patch({ phase:'question', currentQ:null, answers:{}, jepResponses:[] });
   const renderGrid = () => cats.map(cat=>`
     <div class="jep-cat-header">${cat}</div>
     ${JEOPARDY_DATA[cat].map(item=>{ const key=cat+'_'+item.pts; const used=s.jepUsed?.[key];
       return `<div class="jep-cell ${used?'used':''}" onclick="hostPickJep('${cat}',${item.pts})" id="jc-${cat.replace(/\s/g,'_')}-${item.pts}"><div class="jep-pts">${item.pts}</div></div>`; }).join('')}`).join('');
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label">🔔 Jeopardy — Elige una casilla</div>
+      <div class="q-label">Jeopardy — Elige una casilla</div>
       <div class="jep-grid" id="jep-grid">${renderGrid()}</div>
       <div id="jep-q-area"></div>
     </div>`;
-  hostGetAI('Bienvenidos al Jeopardy. Actúa como presentador corrupto que ya sabe los ganadores.');
+  hostGetAI('Bienvenidos al Jeopardy. Actua como presentador corrupto que ya sabe los ganadores.');
 }
 
 function hostPickJep(cat, pts) {
@@ -853,96 +919,91 @@ function hostPickJep(cat, pts) {
   if (s.jepUsed?.[key]) return;
   const item = JEOPARDY_DATA[cat].find(i=>i.pts===pts); if(!item)return;
   jepQ = {...item, cat, key};
-  patch({ jepUsed:{...(s.jepUsed||{}),[key]:true}, currentQ:jepQ, buzzOrder:[], buzzed:null });
+  // Send question to players, clear previous responses
+  patch({ jepUsed:{...(s.jepUsed||{}),[key]:true}, currentQ:jepQ, answers:{}, jepResponses:[] });
   document.getElementById('jc-'+cat.replace(/\s/g,'_')+'-'+pts)?.classList.add('used');
-  lastBuzzed = null;
   const area = document.getElementById('jep-q-area');
   if (area) area.innerHTML=`
     <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-top:10px">
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${cat} — ${pts} pts</div>
-      <div style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:8px">${item.q}</div>
-      <div id="jep-answer-hidden" style="background:var(--s2);border:1px dashed var(--border);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--muted);cursor:pointer" onclick="revealJepAnswer('${item.a.replace(/'/g,"\\'")}')">
-        🔒 Respuesta oculta — clic para revelar (solo el host la ve)
+      <div style="font-size:15px;font-weight:500;line-height:1.5;margin-bottom:10px">${item.q}</div>
+      <div id="jep-answer-hidden" style="background:var(--s2);border:1px dashed var(--border2);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:10px" onclick="revealJepAnswer('${item.a.replace(/'/g,"\\'")}')">
+        Respuesta oculta — clic para revelar
       </div>
     </div>
-    <div id="buzz-board" class="buzz-order-board"></div>
-    <div class="host-controls" style="margin-top:8px">
-      <button class="btn btn-green" onclick="judgeJep(true)">✓ Correcto (+${pts})</button>
-      <button class="btn btn-red" onclick="judgeJep(false)">✗ Incorrecto (-${Math.floor(pts/2)})</button>
-      <button class="btn btn-orange" onclick="resetBuzz()">↺ Resetear buzz</button>
-      <button class="btn btn-ghost" onclick="jepDone()">→ Siguiente casilla</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px;margin-bottom:4px">Respuestas recibidas (en orden de llegada):</div>
+    <div id="jep-responses-board" style="display:flex;flex-direction:column;gap:6px;min-height:40px"></div>
+    <div class="ans-status" id="ans-chips" style="margin-top:8px"></div>
+    <div class="host-controls" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="jepDone()">Siguiente casilla</button>
     </div>`;
-  startTimerVal(15);
+  startTimerVal(30);
+  // Poll for responses
+  _jepResponsePoll = setInterval(updateJepResponses, 600);
+}
+
+let _jepResponsePoll = null;
+function updateJepResponses() {
+  const s = gameState;
+  const responses = s.jepResponses || [];
+  const board = document.getElementById('jep-responses-board');
+  if (!board) { clearInterval(_jepResponsePoll); return; }
+  // Update chips
+  updateAnswerChips(s);
+  // Show responses (hidden by default, click to reveal each)
+  board.innerHTML = responses.map((r, i) => `
+    <div id="jep-resp-${i}" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px">${PD[r.k]?.emoji}</span>
+      <span style="font-size:14px;font-weight:500;flex:1">${PD[r.k]?.name}</span>
+      <span id="jep-resp-text-${i}" style="font-size:13px;color:var(--dim);cursor:pointer" onclick="revealJepResponse(${i},'${r.ans.replace(/'/g,"\\'")}')">Oculta — clic para ver</span>
+      <button class="btn btn-green" style="padding:4px 12px;font-size:12px" onclick="judgeJepPlayer('${r.k}',true,${jepQ?.pts||100})">+${jepQ?.pts||100}</button>
+      <button class="btn btn-red" style="padding:4px 12px;font-size:12px" onclick="judgeJepPlayer('${r.k}',false,${jepQ?.pts||100})">-50</button>
+    </div>`).join('');
+}
+
+function revealJepResponse(idx, answer) {
+  const el = document.getElementById('jep-resp-text-'+idx);
+  if (el) { el.textContent = answer; el.style.color = 'var(--text)'; el.onclick = null; }
 }
 
 function revealJepAnswer(answer) {
   const el = document.getElementById('jep-answer-hidden');
   if (el) {
-    el.style.background = 'var(--s3)';
-    el.style.borderColor = 'var(--green)';
-    el.style.color = 'var(--green)';
-    el.style.cursor = 'default';
-    el.innerHTML = '✓ Respuesta: ' + answer;
-    el.onclick = null;
+    el.style.background='var(--s3)'; el.style.borderColor='var(--green)';
+    el.style.color='var(--green)'; el.style.cursor='default';
+    el.innerHTML = 'Respuesta: ' + answer; el.onclick = null;
   }
 }
 
-function renderBuzzBoard(order) {
-  const board = document.getElementById('buzz-board'); if(!board)return;
-  if (!order || order.length===0) { board.innerHTML=''; return; }
-  const medals = ['🥇','🥈','🥉'];
-  const classes = ['first','second','third'];
-  board.innerHTML = order.map((k,i)=>`
-    <div class="buzz-order-row ${classes[i]||''}">
-      <div class="buzz-rank ${i===0?'first':''}">${medals[i]||`${i+1}.`}</div>
-      <div style="font-size:22px">${PD[k].emoji}</div>
-      <div style="font-size:16px;font-weight:600">${PD[k].name}</div>
-      <div style="font-size:12px;color:var(--muted);margin-left:auto">${i===0?'Responde primero':i===1?'Si falla, responde segundo':'Si fallan los dos, responde'}</div>
-    </div>`).join('');
-}
-
-function resetBuzz() {
-  patch({ buzzOrder:[], buzzed:null });
-  // Clear buzz board visually immediately (don't wait for server roundtrip)
-  const board = document.getElementById('buzz-board');
-  if (board) board.innerHTML = '';
-  notify('🔄 Buzz reseteado — pueden volver a buzzear');
-}
-
-function judgeJep(correct) {
-  const s=gameState; const order=s.buzzOrder||[];
-  const player = order[0]; // first in order gets to answer
-  if (!player) { notify('Nadie ha buzzeado aún'); return; }
-  const pts=jepQ?.pts||100; const ns={...s.scores};
-  if (correct) { ns[player]=(ns[player]||0)+pts; notify(`✅ ${PD[player].name} +${pts} pts`); }
-  else { ns[player]=Math.max(0,(ns[player]||0)-Math.floor(pts/2)); notify(`❌ ${PD[player].name} -${Math.floor(pts/2)} pts`); }
-  patch({ scores:ns, buzzOrder:[], buzzed:null });
+function judgeJepPlayer(playerKey, correct, pts) {
+  const ns = {...gameState.scores};
+  if (correct) { ns[playerKey]=(ns[playerKey]||0)+pts; notify(`${PD[playerKey].name} +${pts} pts`); }
+  else { ns[playerKey]=Math.max(0,(ns[playerKey]||0)-50); notify(`${PD[playerKey].name} -50 pts`); }
+  patch({ scores:ns });
   renderScoresBar(getState());
-  const s2=gameState; const total2=Object.values(JEOPARDY_DATA).reduce((a,c)=>a+c.length,0);
-  const allUsed=Object.keys(s2.jepUsed||{}).length>=total2;
-  hostGetAI(`${PD[player].name} ${correct?'respondio correctamente':'fallo miserablemente'} en Jeopardy. ${correct?'+'+pts:'-'+Math.floor(pts/2)} puntos.`, () => {
-    if (allUsed) {
-      showNavPanel({
-        onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
-        onNextGame:()=>nextRound()
-      });
-    }
-    // If not all used, host picks more casillas from the grid above
-  });
+}
+
+function judgeJepAllWrong() {
+  // Nobody answered correctly — all lose 50 pts
+  const ns = {...gameState.scores};
+  Object.keys(PD).forEach(k=>{ ns[k]=Math.max(0,(ns[k]||0)-50); });
+  patch({ scores:ns });
+  renderScoresBar(getState());
+  notify('Nadie acerto — todos -50 pts');
 }
 
 function jepDone() {
+  if (_jepResponsePoll) { clearInterval(_jepResponsePoll); _jepResponsePoll=null; }
   const s=gameState; const total=Object.values(JEOPARDY_DATA).reduce((a,c)=>a+c.length,0);
-  if (Object.keys(s.jepUsed||{}).length>=total) {
-    showNavPanel({
-      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
-      onNextGame:()=>nextRound()
-    });
-  }
-  // Even if not done, always show nav so host can leave
-  else {
-    // Keep grid visible, but ensure nav is accessible via the grid itself
-    // Don't show nav here - host should pick more casillas or use grid
+  const allUsed = Object.keys(s.jepUsed||{}).length>=total;
+  showNavPanel({
+    onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+    onNextGame:()=>nextRound()
+  });
+  // Re-render grid for more picks if not done
+  if (!allUsed) {
+    const area = document.getElementById('jep-q-area');
+    if (area) area.innerHTML='';
   }
 }
 
@@ -988,123 +1049,246 @@ function hostRevealConspiracy(){
 }
 // ── DESCRIBE IT — 3 turns, one per player, random order ──
 function hostDescribeRound() {
-  const s = gameState;
   const turn=descTurnLocal;
   const order=gameState.playerOrder||['felipe','rave','burns'];
   if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
   const drawer = order[turn];
   const word = DESCRIBE_WORDS[Math.floor(Math.random()*DESCRIBE_WORDS.length)];
-  patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{} });
+  // Host does NOT see the word — it goes only to the drawer via state
+  patch({ phase:'question', currentQ:{word, drawer, turn, descChat:[]}, answers:{} });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label">🗣️ Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} describe</div>
-      <div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:16px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">PALABRA (solo el host ve esto):</div>
-        <div class="display" style="font-size:30px;color:var(--orange)">${word}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:6px">${PD[drawer].name} describe de voz. Los otros dos escriben en sus teléfonos.</div>
+      <div class="q-label">Descríbelo — Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} describe</div>
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
+        <div style="font-size:13px;color:var(--muted)">La palabra está oculta para todos.</div>
+        <div style="font-size:12px;color:var(--dim);margin-top:4px">${PD[drawer].name} la ve en su celular.</div>
       </div>
-      <div class="ans-status" id="ans-chips"></div>
-      <div class="host-controls">
-        <button class="btn btn-green" onclick="hostRevealDescribe(true)">✓ Alguien adivinó</button>
-        <button class="btn btn-red" onclick="hostRevealDescribe(false)">✗ Tiempo / Nadie</button>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px">Respuestas en tiempo real:</div>
+      <div id="desc-chat-host" style="background:var(--s2);border-radius:var(--r2);padding:10px;min-height:60px;font-size:13px;color:var(--muted)">Esperando respuestas...</div>
+      <div class="timer-bar" style="margin-top:8px"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
+      <div id="desc-timer-text" style="text-align:center;font-size:13px;color:var(--muted);margin-top:4px">90s</div>
+      <div class="host-controls" style="margin-top:8px">
+        ${Object.keys(PD).filter(k=>k!==drawer).map(k=>`<button class="btn btn-green" onclick="hostRevealDescribe('${k}')">✓ ${PD[k].name} adivinó (+100/+50)</button>`).join('')}
+        <button class="btn btn-red" onclick="hostRevealDescribe(null)">✗ Nadie adivinó</button>
       </div>
     </div>`;
-  startTimerVal(45);
-  hostGetAI(`${PD[drawer].name} tiene que describir "${word}" sin decirlo. Turno ${turn+1} de 3. Comenta sobre sus habilidades descriptivas cuestionables.`);
+  startDescribeTimer(90);
+  hostGetAI(`Turno ${turn+1}: ${PD[drawer].name} describe algo en secreto. Los otros escriben en chat. Comenta de forma cruel sobre las habilidades de ${PD[drawer].name}.`);
 }
 
-function hostRevealDescribe(success) {
+let _descTimerInterval = null;
+function startDescribeTimer(sec) {
+  if (_descTimerInterval) clearInterval(_descTimerInterval);
+  if (timerInt) clearInterval(timerInt);
+  let t = sec;
+  _descTimerInterval = setInterval(() => {
+    t--;
+    const f = document.getElementById('t-fill');
+    const txt = document.getElementById('desc-timer-text');
+    const tv = document.getElementById('gb-timer');
+    if (f) { f.style.width=(t/sec*100)+'%'; if(t<=10) f.className='timer-fill urgent'; }
+    if (txt) txt.textContent = t+'s';
+    if (tv) { tv.textContent=t; tv.className='gb-timer'+(t<=10?' urgent':''); }
+    // Update chat from state
+    const q = gameState.currentQ;
+    if (q?.descChat?.length > 0) {
+      const chatEl = document.getElementById('desc-chat-host');
+      if (chatEl) {
+        chatEl.innerHTML = [...q.descChat].reverse().map(m =>
+          `<div style="padding:4px 0;border-bottom:1px solid var(--border)"><span style="color:${PD[m.k]?.color||'var(--orange)'};font-weight:600">${PD[m.k]?.emoji} ${PD[m.k]?.name}:</span> ${m.txt}</div>`
+        ).join('');
+      }
+    }
+    if (t <= 0) {
+      clearInterval(_descTimerInterval);
+      _descTimerInterval = null;
+      notify('Tiempo agotado en Describe It');
+    }
+  }, 1000);
+}
+
+function hostRevealDescribe(winnerKey) {
+  if (_descTimerInterval) { clearInterval(_descTimerInterval); _descTimerInterval = null; }
   const s=gameState, q=s.currentQ; const ns={...s.scores};
-  if (success) {
-    ns[q.drawer]=(ns[q.drawer]||0)+100;
-    Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k]) ns[k]=(ns[k]||0)+75; });
+  if (winnerKey) {
+    ns[q.drawer] = (ns[q.drawer]||0) + 50;
+    ns[winnerKey] = (ns[winnerKey]||0) + 100;
   }
   patch({ scores:ns, phase:'reveal' });
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">La palabra era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};margin-top:4px">${success?'✅ ¡Adivinaron!':'❌ Fracaso total'}</div></div>`);
+  const chatLog = q.descChat || [];
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade">
+    <div style="font-size:12px;color:var(--muted)">La palabra era:</div>
+    <div class="reveal-answer">${q.word}</div>
+    <div style="font-size:14px;color:${winnerKey?'var(--green)':'var(--red)'};margin-top:4px">${winnerKey?`✅ ${PD[winnerKey].name} adivinó!`:'❌ Nadie adivinó'}</div>
+    ${winnerKey?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${PD[q.drawer].name} +50 pts · ${PD[winnerKey].name} +100 pts</div>`:''}
+    <div style="font-size:12px;color:var(--muted);margin:10px 0 6px">Chat completo:</div>
+    <div style="background:var(--s3);border-radius:var(--r2);padding:10px;font-size:12px;max-height:150px;overflow-y:auto">
+      ${chatLog.length>0 ? chatLog.map(m=>`<div style="padding:3px 0"><span style="color:${PD[m.k]?.color||'var(--orange)'};font-weight:600">${PD[m.k]?.emoji} ${PD[m.k]?.name}:</span> ${m.txt}</div>`).join('') : '<span style="color:var(--dim)">Sin mensajes</span>'}
+    </div>
+  </div>`);
   renderScoresBar(getState());
   descTurnLocal++;
-  hostGetAI(`${success?'Adivinaron':'Nadie adivino'} la palabra. Juzga brutalmente.`,()=>{
-    showNavPanel({onNextQ:descTurnLocal<3?()=>{patch({answers:{}});hostDescribeRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+  hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} la palabra "${q.word}". Juzga brutalmente las habilidades descriptivas.`,()=>{
+    showNavPanel({onNextQ:descTurnLocal<3?()=>{patch({answers:{},descChat:[]});hostDescribeRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
 // ── DRAW & DESTROY — 3 turns ──
+let _drawTimerInterval = null;
 function hostDrawRound() {
-  const s = gameState;
   const turn=drawTurnLocal;
   const order=gameState.playerOrder||['felipe','rave','burns'];
   if(turn>=3){showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});return;}
   const drawer = order[turn];
   const word = DRAW_WORDS[Math.floor(Math.random()*DRAW_WORDS.length)];
-  patch({ phase:'question', currentQ:{word, drawer, turn}, answers:{}, drawData:null });
+  // Host does NOT see word
+  patch({ phase:'question', currentQ:{word, drawer, turn, drawChat:[]}, answers:{}, drawData:null });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label">🎨 Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} dibuja</div>
-      <div style="background:var(--s3);border:1px solid var(--orange);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJAR (solo host ve):</div>
-        <div class="display" style="font-size:26px;color:var(--orange)">${word}</div>
+      <div class="q-label">Draw & Destroy — Turno ${turn+1}/3 — ${PD[drawer].emoji} ${PD[drawer].name} dibuja</div>
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:var(--r2);padding:10px;text-align:center;margin-bottom:8px">
+        <div style="font-size:13px;color:var(--muted)">El dibujo está oculto para todos. ${PD[drawer].name} lo ve en su celular.</div>
       </div>
-      <div id="drawing-preview" style="background:#fff;border-radius:var(--r2);min-height:80px;display:flex;align-items:center;justify-content:center"><span style="color:#888;font-size:13px">El dibujo aparece aquí en tiempo real...</span></div>
-      <div class="ans-status" id="ans-chips"></div>
-      <div class="host-controls">
-        <button class="btn btn-green" onclick="hostRevealDraw(true)">✓ Adivinaron</button>
-        <button class="btn btn-red" onclick="hostRevealDraw(false)">✗ Nadie / Tiempo</button>
+      <div id="drawing-preview" style="background:#fff;border-radius:var(--r2);min-height:100px;display:flex;align-items:center;justify-content:center"><span style="color:#888;font-size:13px">Dibujo en tiempo real...</span></div>
+      <div style="font-size:12px;color:var(--muted);margin:8px 0 4px">Respuestas del chat:</div>
+      <div id="draw-chat-host" style="background:var(--s2);border-radius:var(--r2);padding:10px;min-height:50px;font-size:13px;color:var(--muted)">Esperando...</div>
+      <div class="timer-bar" style="margin-top:8px"><div class="timer-fill ok" id="t-fill" style="width:100%"></div></div>
+      <div class="host-controls" style="margin-top:8px">
+        ${Object.keys(PD).filter(k=>k!==drawer).map(k=>`<button class="btn btn-green" onclick="hostRevealDraw('${k}')">✓ ${PD[k].name} adivinó (+100/+50)</button>`).join('')}
+        <button class="btn btn-red" onclick="hostRevealDraw(null)">✗ Nadie adivinó</button>
       </div>
     </div>`;
-  startTimerVal(60);
-  hostGetAI(`${PD[drawer].name} tiene que dibujar "${word}". Turno ${turn+1} de 3. Comenta sobre sus habilidades artísticas inexistentes.`);
+  startDrawHostTimer(90);
+  hostGetAI(`${PD[drawer].name} dibuja algo en secreto. Turno ${turn+1}. Los otros adivinan por chat. Comenta sus habilidades artisticas inexistentes.`);
 }
 
-function hostRevealDraw(success) {
+function startDrawHostTimer(sec) {
+  if (_drawTimerInterval) clearInterval(_drawTimerInterval);
+  if (timerInt) clearInterval(timerInt);
+  let t = sec;
+  _drawTimerInterval = setInterval(()=>{
+    t--;
+    const f=document.getElementById('t-fill');
+    const tv=document.getElementById('gb-timer');
+    if(f){f.style.width=(t/sec*100)+'%';if(t<=10)f.className='timer-fill urgent';}
+    if(tv){tv.textContent=t;tv.className='gb-timer'+(t<=10?' urgent':'');}
+    // Update draw chat
+    const q=gameState.currentQ;
+    if(q?.drawChat?.length>0){
+      const el=document.getElementById('draw-chat-host');
+      if(el) el.innerHTML=[...q.drawChat].reverse().map(m=>`<div style="padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:${PD[m.k]?.color||'var(--orange)'};font-weight:600">${PD[m.k]?.emoji} ${PD[m.k]?.name}:</span> ${m.txt}</div>`).join('');
+    }
+    if(t<=0){clearInterval(_drawTimerInterval);_drawTimerInterval=null;}
+  },1000);
+}
+
+function hostRevealDraw(winnerKey) {
+  if (_drawTimerInterval) { clearInterval(_drawTimerInterval); _drawTimerInterval = null; }
   const s=gameState, q=s.currentQ; const ns={...s.scores};
-  if (success) {
-    ns[q.drawer]=(ns[q.drawer]||0)+100;
-    Object.keys(PD).filter(k=>k!==q.drawer).forEach(k=>{ if(s.answers?.[k]) ns[k]=(ns[k]||0)+75; });
+  if (winnerKey) {
+    ns[q.drawer]=(ns[q.drawer]||0)+50;
+    ns[winnerKey]=(ns[winnerKey]||0)+100;
   }
   patch({ scores:ns, phase:'reveal' });
-  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade"><div style="font-size:12px;color:var(--muted)">El dibujo era:</div><div class="reveal-answer">${q.word}</div><div style="font-size:14px;color:${success?'var(--green)':'var(--red)'};">${success?'✅ ¡Adivinaron!':'❌ Arte incomprendido'}</div></div>`);
+  const chatLog = q.drawChat || [];
+  document.querySelector('.q-card').insertAdjacentHTML('afterend',`<div class="reveal-card fade">
+    <div style="font-size:12px;color:var(--muted)">El dibujo era:</div>
+    <div class="reveal-answer">${q.word}</div>
+    <div style="font-size:14px;color:${winnerKey?'var(--green)':'var(--red)'};">${winnerKey?`✅ ${PD[winnerKey].name} adivinó!`:'❌ Arte incomprendido'}</div>
+    ${winnerKey?`<div style="font-size:12px;color:var(--muted);margin-top:4px">${PD[q.drawer].name} +50 pts · ${PD[winnerKey].name} +100 pts</div>`:''}
+    <div style="font-size:12px;color:var(--muted);margin:10px 0 6px">Chat completo:</div>
+    <div style="background:var(--s3);border-radius:var(--r2);padding:10px;font-size:12px;max-height:150px;overflow-y:auto">
+      ${chatLog.length>0?chatLog.map(m=>`<div style="padding:3px 0"><span style="color:${PD[m.k]?.color||'var(--orange)'};font-weight:600">${PD[m.k]?.emoji} ${PD[m.k]?.name}:</span> ${m.txt}</div>`).join(''):'<span style="color:var(--dim)">Sin mensajes</span>'}
+    </div>
+  </div>`);
   renderScoresBar(getState());
   drawTurnLocal++;
-  hostGetAI(`${PD[q.drawer]?.name} dibujo. Critica como curador decepcionado.`,()=>{
-    showNavPanel({onNextQ:drawTurnLocal<3?()=>{patch({answers:{},drawData:null});hostDrawRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+  hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} el dibujo "${q.word}". Critica el arte y las habilidades de adivinanza.`,()=>{
+    showNavPanel({onNextQ:drawTurnLocal<3?()=>{patch({answers:{},drawData:null,drawChat:[]});hostDrawRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
 // ── MEMORY MAYHEM ──
 function hostMemory() {
-  patch({ phase:'question', currentQ:null, answers:{} });
+  const s = gameState;
+  const correctItems = s.memItems || MEMORY_POOLS[0];
+  // Build 9-item grid: 6 correct + 3 decoys from other pools
+  const allItems = MEMORY_POOLS.flat();
+  const decoys = allItems.filter(i => !correctItems.some(c=>c.emoji===i.emoji))
+    .sort(()=>Math.random()-0.5).slice(0,3);
+  const nineItems = [...correctItems, ...decoys].sort(()=>Math.random()-0.5);
+  patch({ phase:'question', currentQ:{ correctItems, nineItems }, answers:{} });
   document.getElementById('game-body').innerHTML=`
-    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">🎙️ EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
+    <div class="host-bubble fade" id="ai-bubble"><div class="hb-label">EL HOST</div><div style="height:20px;display:flex;align-items:center"><span class="dots"><span></span><span></span><span></span></span></div></div>
     <div class="q-card fade">
-      <div class="q-label">🧠 Memory Mayhem</div>
-      <div class="q-text">¿Recuerdan los 6 ítems del principio? Escríbanlos en sus teléfonos.</div>
+      <div class="q-label">Memory Mayhem</div>
+      <div class="q-text">Los jugadores seleccionan los 6 ítems que recuerdan en sus teléfonos.</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:-6px">+100 por acierto, -50 por error. Respuestas automáticas.</div>
       <div class="ans-status" id="ans-chips"></div>
-      <div class="host-controls"><button class="btn btn-ghost" onclick="hostRevealMemory()">Revelar y juzgar</button></div>
+      <div class="host-controls">
+        <button class="btn btn-ghost" onclick="hostRevealMemory()">Ver resultados</button>
+      </div>
     </div>`;
-  hostGetAI('Es la ronda de memoria. Preséntalo como el momento del juicio final. Que recen.');
+  hostGetAI('Es la ronda de memoria. Hay 9 simbolos, 6 son correctos, 3 son trampas. Presentalo como el momento del juicio final. Amenazalos.');
 }
 
 function hostRevealMemory() {
   const s=gameState;
-  const items = s.memItems || MEMORY_POOLS[0];
+  const q=s.currentQ;
+  const correctItems = q?.correctItems || s.memItems || MEMORY_POOLS[0];
   patch({ phase:'reveal' });
+  // Auto-score already happened on player side, just show results
   const h=`<div class="reveal-card fade">
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Los ítems eran:</div>
-    <div class="mem-grid" style="margin-bottom:14px">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Otorga puntos manualmente:</div>
-    ${Object.entries(s.answers||{}).map(([k,v])=>`<div class="pr-row"><div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span><span class="pr-ans">${v}</span></div><button onclick="awardMem('${k}')" class="btn btn-green" style="padding:4px 12px;font-size:12px">+200</button></div>`).join('')}
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Los 6 ítems correctos:</div>
+    <div class="mem-grid" style="margin-bottom:14px">${correctItems.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Resultados (+100 acierto, -50 error):</div>
+    ${Object.entries(s.answers||{}).map(([k,v])=>{
+      let parsed; try{ parsed=JSON.parse(v); }catch(e){ parsed=[]; }
+      const correct=parsed.filter(e=>correctItems.some(c=>c.emoji===e)).length;
+      const wrong=parsed.filter(e=>!correctItems.some(c=>c.emoji===e)).length;
+      const pts=correct*100 - wrong*50;
+      return `<div class="pr-row">
+        <div class="pr-left"><span style="font-size:18px">${PD[k].emoji}</span><span class="pr-name">${PD[k].name}</span>
+        <span class="pr-ans">${correct} correctos, ${wrong} incorrectos</span></div>
+        <span class="pr-pts ${pts>=0?'pts-win':'pts-lose'}">${pts>=0?'+'+pts:pts}</span>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:10px">
+      <button class="btn btn-ghost" style="font-size:12px" onclick="toggleMemDetails()">Ver selecciones de cada jugador</button>
+      <div id="mem-details" style="display:none;margin-top:8px">
+        ${Object.entries(s.answers||{}).map(([k,v])=>{
+          let parsed; try{ parsed=JSON.parse(v); }catch(e){ parsed=[]; }
+          return `<div style="margin-bottom:8px"><div style="font-size:12px;font-weight:600;margin-bottom:4px">${PD[k].emoji} ${PD[k].name}:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">${parsed.map(e=>{
+              const isCorrect=correctItems.some(c=>c.emoji===e);
+              return `<span style="padding:2px 8px;border-radius:4px;font-size:13px;background:${isCorrect?'#0a1f0a':'#1f0a0a'};color:${isCorrect?'var(--green)':'var(--red)'}">${e}</span>`;
+            }).join('')}</div></div>`;
+        }).join('')}
+      </div>
+    </div>
   </div>`;
   document.querySelector('.q-card').insertAdjacentHTML('afterend',h);
-  hostGetAI(`Memory Mayhem. Ítems: ${items.map(m=>m.label).join(', ')}. Respuestas: ${Object.entries(s.answers||{}).map(([k,v])=>`${PD[k].name}: "${v.substring(0,40)}"`).join('; ')}. Juzga sus memorias de pez dorado.`);
+  renderScoresBar(getState());
+  hostGetAI(`Memory Mayhem completado. Resultados: ${Object.entries(s.answers||{}).map(([k,v])=>{let p;try{p=JSON.parse(v);}catch(e){p=[];}const c=p.filter(e=>correctItems.some(ci=>ci.emoji===e)).length;return PD[k].name+': '+c+'/6';}).join(', ')}. Juzga sus memorias de pez dorado.`);
+  setTimeout(()=>{
+    showNavPanel({
+      onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
+      onNextGame:()=>nextRound()
+    });
+  }, 3000);
+}
+
+function toggleMemDetails() {
+  const el = document.getElementById('mem-details');
+  if (el) el.style.display = el.style.display==='none'?'block':'none';
 }
 
 function awardMem(k){
+  // Legacy - kept for compatibility
   const s=getState();const ns={...s.scores};ns[k]=(ns[k]||0)+200;
   patch({scores:ns});renderScoresBar(getState());notify(`${PD[k].name} +200 pts!`);
-  document.getElementById('next-btn')?.remove();
-  showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
 }
 
 // ── FINAL BOSS ──
@@ -1390,28 +1574,56 @@ function playerJeopardy(s) {
     document.getElementById('game-body').innerHTML=`<div class="q-card fade" style="text-align:center;padding:28px 20px"><div style="font-size:40px;margin-bottom:10px">🔔</div><div class="display" style="font-size:26px;color:var(--orange)">JEOPARDY</div><p style="font-size:14px;color:var(--muted);margin-top:8px">El host elige una pregunta...</p></div>`;
     return;
   }
-  const order = s.buzzOrder||[];
-  const myPos = order.indexOf(myKey);
-  const alreadyBuzzed = myPos >= 0;
+  // Check if I already submitted a response for this question
+  const responses = s.jepResponses || [];
+  const myResp = responses.find(r=>r.k===myKey);
+  if (myResp) {
+    document.getElementById('game-body').innerHTML=`<div class="q-card fade">
+      <div class="q-label">Jeopardy — ${q.cat} — ${q.pts} pts</div>
+      <div class="q-text">${q.q}</div>
+      <div style="background:var(--s3);border:1px solid var(--green);border-radius:var(--r2);padding:12px;text-align:center;margin-top:8px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Tu respuesta enviada:</div>
+        <div style="font-size:16px;color:var(--green);font-weight:500">${myResp.ans}</div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">Esperando al host...</p>
+    </div>`;
+    return;
+  }
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="q-label">🔔 ${q.cat} — ${q.pts} pts</div>
+    <div class="q-label">Jeopardy — ${q.cat} — ${q.pts} pts</div>
     <div class="q-text">${q.q}</div>
-    <button class="buzz-btn-big" id="buzz-button" onclick="playerBuzz()" ${alreadyBuzzed?'disabled':''}>
-      ${alreadyBuzzed ? `#${myPos+1} en buzzear` : '¡BUZZ!'}
-    </button>
-    ${order.length>0?`<div style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">Orden: ${order.map((k,i)=>`${i+1}. ${PD[k]?.emoji}${PD[k]?.name}`).join(' → ')}</div>`:''}
-    <div class="ans-status" id="ans-chips"></div></div>`;
+    <div style="margin-top:8px">
+      <input type="text" id="jep-answer-input" placeholder="Escribe tu respuesta..." style="width:100%" onkeydown="if(event.key==='Enter')submitJepAnswer()" />
+      <button class="btn btn-blue btn-block" onclick="submitJepAnswer()" style="margin-top:8px">Enviar respuesta</button>
+    </div>
+    <div class="ans-status" id="ans-chips"></div>
+  </div>`;
+  updateAnswerChips(s);
 }
 
-function playerBuzz() {
-  const s=gameState;
-  const order=s.buzzOrder||[];
-  if(order.includes(myKey))return;
-  const newOrder=[...order, myKey];
-  setKey('buzzOrder', newOrder);
-  const btn=document.getElementById('buzz-button');
-  if(btn){btn.disabled=true;btn.textContent=`#${newOrder.length} en buzzear`;}
-  notify(`${PD[myKey].emoji} ¡Buzzeaste en #${newOrder.length}!`);
+function submitJepAnswer() {
+  const inp = document.getElementById('jep-answer-input');
+  if (!inp || !inp.value.trim()) return;
+  const ans = inp.value.trim();
+  inp.disabled = true;
+  document.querySelector('[onclick="submitJepAnswer()"]').disabled = true;
+  // Add to ordered responses list
+  const s = gameState;
+  const current = s.jepResponses || [];
+  if (current.find(r=>r.k===myKey)) return; // already submitted
+  const newResponses = [...current, { k: myKey, ans, ts: Date.now() }];
+  setKey('jepResponses', newResponses);
+  notify(`${PD[myKey].emoji} Respuesta enviada`);
+  // Show sent state
+  document.getElementById('game-body').innerHTML=`<div class="q-card fade">
+    <div class="q-label">Jeopardy — ${s.currentQ?.cat} — ${s.currentQ?.pts} pts</div>
+    <div class="q-text">${s.currentQ?.q}</div>
+    <div style="background:var(--s3);border:1px solid var(--green);border-radius:var(--r2);padding:12px;text-align:center;margin-top:8px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">Tu respuesta enviada:</div>
+      <div style="font-size:16px;color:var(--green);font-weight:500">${ans}</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:8px">Esperando al host...</p>
+  </div>`;
 }
 
 function playerConspiracy(s) {
@@ -1427,70 +1639,275 @@ function playerConspiracy(s) {
   updateAnswerChips(s);
 }
 
+let _descPlayerTimer = null;
 function playerDescribe(s) {
   const q=s.currentQ; if(!q)return;
   const isMe = q.drawer===myKey;
   if(isMe){
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🗣️ Tu turno de describir (${(q.turn||0)+1}/3)</div>
-      <div style="background:var(--s3);border:1px solid var(--red);border-radius:var(--r2);padding:16px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">DESCRIBE ESTO SIN DECIRLO:</div>
-        <div class="display" style="font-size:28px;color:var(--orange)">${q.word}</div>
-      </div>
-      <p style="font-size:13px;color:var(--muted);text-align:center;margin-top:4px">Los otros dos escriben en sus teléfonos. Tú hablas.</p>
-    </div>`;
+    // Drawer: see countdown then word is revealed
+    const body = document.getElementById('game-body');
+    if (!body.querySelector('.q-card')) {
+      body.innerHTML=`<div class="q-card fade">
+        <div class="q-label">Tu turno de describir (${(q.turn||0)+1}/3)</div>
+        <div id="drawer-reveal-area" style="text-align:center;padding:20px 0">
+          <div style="font-size:14px;color:var(--muted);margin-bottom:8px">La palabra se revela en...</div>
+          <div id="drawer-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">10</div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);text-align:center">Prepárate para describir sin decir la palabra.</p>
+      </div>`;
+      startDrawerCountdown(q.word);
+    }
   } else {
-    if(s.answers?.[myKey]){ playerShowReveal(); return; }
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🗣️ ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} describe (${(q.turn||0)+1}/3)</div>
-      <div class="q-text">Escucha y escribe tu respuesta</div>
-      <input type="text" id="desc-input" placeholder="¿Qué está describiendo?" />
-      <button class="btn btn-blue btn-block" onclick="playerAnswerText('desc-input')" style="margin-top:8px">Enviar →</button>
-      <div class="ans-status" id="ans-chips"></div></div>`;
-    updateAnswerChips(s);
+    // Guesser: live chat input, no answer lock
+    const body = document.getElementById('game-body');
+    if (!body.querySelector('#desc-chat-area')) {
+      body.innerHTML=`<div class="q-card fade">
+        <div class="q-label">${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} describe algo...</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Escribe lo que crees que es (puedes enviar múltiples respuestas):</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="desc-chat-input" placeholder="Tu respuesta..." style="flex:1" onkeydown="if(event.key==='Enter')sendDescChat()" />
+          <button class="btn btn-blue" onclick="sendDescChat()" style="padding:10px 16px;flex-shrink:0">Enviar</button>
+        </div>
+        <div id="desc-chat-area" style="background:var(--s2);border-radius:var(--r2);padding:10px;min-height:60px;font-size:13px;color:var(--muted)">Tus respuestas aparecen aquí...</div>
+        <div class="timer-bar" style="margin-top:8px"><div class="timer-fill ok" id="dp-fill" style="width:100%"></div></div>
+        <div id="dp-cd" style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px">90s</div>
+      </div>`;
+      startDescPlayerTimer(90);
+    }
+    // Update chat display
+    if (q.descChat?.length > 0) {
+      const chatEl = document.getElementById('desc-chat-area');
+      if (chatEl) {
+        const myMsgs = q.descChat.filter(m=>m.k===myKey);
+        if (myMsgs.length > 0) {
+          chatEl.innerHTML = [...myMsgs].reverse().map(m=>
+            `<div style="padding:3px 0;border-bottom:1px solid var(--border);color:var(--text)">${m.txt}</div>`
+          ).join('');
+        }
+      }
+    }
   }
+}
+
+function startDrawerCountdown(word) {
+  let t = 10;
+  const iv = setInterval(() => {
+    t--;
+    const el = document.getElementById('drawer-countdown');
+    if (!el) { clearInterval(iv); return; }
+    if (t > 0) {
+      el.textContent = t;
+      el.style.color = t <= 3 ? 'var(--green)' : 'var(--red)';
+    } else {
+      clearInterval(iv);
+      const area = document.getElementById('drawer-reveal-area');
+      if (area) {
+        area.innerHTML = `
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px">DESCRIBE ESTO SIN DECIRLO:</div>
+          <div class="display" style="font-size:32px;color:var(--orange)">${word}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">¡Habla! Los otros están escribiendo sus respuestas.</div>`;
+      }
+    }
+  }, 1000);
+}
+
+function startDescPlayerTimer(sec) {
+  if (_descPlayerTimer) clearInterval(_descPlayerTimer);
+  let t = sec;
+  _descPlayerTimer = setInterval(()=>{
+    t--;
+    const f=document.getElementById('dp-fill'), cd=document.getElementById('dp-cd');
+    if(f) f.style.width=(t/sec*100)+'%';
+    if(cd) cd.textContent=t+'s';
+    if(t<=0) { clearInterval(_descPlayerTimer); _descPlayerTimer=null;
+      const inp=document.getElementById('desc-chat-input');
+      const btn=document.querySelector('[onclick="sendDescChat()"]');
+      if(inp) inp.disabled=true; if(btn) btn.disabled=true;
+    }
+  }, 1000);
+}
+
+function sendDescChat() {
+  const inp = document.getElementById('desc-chat-input');
+  if (!inp || !inp.value.trim()) return;
+  const txt = inp.value.trim();
+  inp.value = '';
+  const s = gameState;
+  const q = s.currentQ;
+  if (!q) return;
+  const newChat = [...(q.descChat||[]), { k: myKey, txt, ts: Date.now() }];
+  setKey('currentQ', {...q, descChat: newChat});
 }
 
 function playerDraw(s) {
   const q=s.currentQ; if(!q)return;
   const isMe = q.drawer===myKey;
   if(isMe){
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🎨 Tu turno de dibujar (${(q.turn||0)+1}/3)</div>
-      <div style="background:var(--s3);border:1px solid var(--orange);border-radius:var(--r2);padding:12px;text-align:center;margin-bottom:8px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJA:</div>
-        <div class="display" style="font-size:24px;color:var(--orange)">${q.word}</div>
-      </div>
-      <canvas id="draw-canvas" width="500" height="260"></canvas>
-      <div class="draw-toolbar">
-        ${['#000000','#ff2d55','#0a84ff','#30d158','#ff9f0a','#bf5af2','#ffffff'].map((c,i)=>`<div class="color-dot ${i===0?'on':''}" style="background:${c};${c==='#ffffff'?'border-color:#555':''}" onclick="setColor('${c}',this)"></div>`).join('')}
-        <button class="size-btn on" onclick="setSize(4,this)">S</button>
-        <button class="size-btn" onclick="setSize(10,this)">M</button>
-        <button class="size-btn" onclick="setSize(20,this)">L</button>
-        <button class="erase-btn" onclick="clearDraw()">✕ Borrar</button>
-      </div></div>`;
-    initDraw();
+    const body = document.getElementById('game-body');
+    if (!body.querySelector('.q-card')) {
+      body.innerHTML=`<div class="q-card fade">
+        <div class="q-label">Tu turno de dibujar (${(q.turn||0)+1}/3)</div>
+        <div id="draw-reveal-area" style="text-align:center;padding:16px 0">
+          <div style="font-size:14px;color:var(--muted);margin-bottom:8px">El prompt se revela en...</div>
+          <div id="draw-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">10</div>
+        </div>
+        <p style="font-size:13px;color:var(--muted);text-align:center">Prepárate para dibujar.</p>
+      </div>`;
+      let dc = 10;
+      const dcIv = setInterval(()=>{
+        dc--;
+        const el=document.getElementById('draw-countdown');
+        if(!el){clearInterval(dcIv);return;}
+        if(dc>0){el.textContent=dc;el.style.color=dc<=3?'var(--green)':'var(--red)';}
+        else{
+          clearInterval(dcIv);
+          const area=document.getElementById('draw-reveal-area');
+          if(area){
+            area.innerHTML=`<div style="font-size:11px;color:var(--muted);margin-bottom:4px">DIBUJA ESTO:</div><div class="display" style="font-size:24px;color:var(--orange);margin-bottom:8px">${q.word}</div>`;
+            // Add canvas after area
+            const qcard = body.querySelector('.q-card');
+            if(qcard){
+              const canvasHTML = `<canvas id="draw-canvas" width="500" height="260"></canvas>
+                <div class="draw-toolbar">
+                  ${['#000000','#ff2d55','#0a84ff','#30d158','#ff9f0a','#bf5af2','#ffffff'].map((c,i)=>`<div class="color-dot ${i===0?'on':''}" style="background:${c};${c==='#ffffff'?'border-color:#555':''}" onclick="setColor('${c}',this)"></div>`).join('')}
+                  <button class="size-btn on" onclick="setSize(4,this)">S</button>
+                  <button class="size-btn" onclick="setSize(10,this)">M</button>
+                  <button class="size-btn" onclick="setSize(20,this)">L</button>
+                  <button class="erase-btn" onclick="clearDraw()">✕ Borrar</button>
+                </div>`;
+              qcard.insertAdjacentHTML('beforeend', canvasHTML);
+              initDraw();
+            }
+          }
+        }
+      },1000);
+    }
   } else {
-    if(s.answers?.[myKey]){ playerShowReveal(); return; }
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-      <div class="q-label">🎨 ${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} dibuja (${(q.turn||0)+1}/3)</div>
-      <div class="q-text">Mira la pantalla del host. ¿Qué está dibujando?</div>
-      <input type="text" id="draw-guess-input" placeholder="Tu respuesta..." />
-      <button class="btn btn-blue btn-block" onclick="playerAnswerText('draw-guess-input')" style="margin-top:8px">Enviar →</button>
-      <div class="ans-status" id="ans-chips"></div></div>`;
-    updateAnswerChips(s);
+    // Guesser: chat mode, no answer lock
+    const body = document.getElementById('game-body');
+    if (!body.querySelector('#draw-chat-area')) {
+      body.innerHTML=`<div class="q-card fade">
+        <div class="q-label">${PD[q.drawer]?.emoji} ${PD[q.drawer]?.name} dibuja algo...</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">¿Qué crees que es? Escribe (puedes enviar varias respuestas):</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input type="text" id="draw-chat-input" placeholder="Tu respuesta..." style="flex:1" onkeydown="if(event.key==='Enter')sendDrawChat()" />
+          <button class="btn btn-blue" onclick="sendDrawChat()" style="padding:10px 16px;flex-shrink:0">Enviar</button>
+        </div>
+        <div id="draw-chat-area" style="background:var(--s2);border-radius:var(--r2);padding:10px;min-height:50px;font-size:13px;color:var(--muted)">Tus respuestas aquí...</div>
+        <div class="timer-bar" style="margin-top:8px"><div class="timer-fill ok" id="dw-fill" style="width:100%"></div></div>
+        <div id="dw-cd" style="text-align:center;font-size:12px;color:var(--muted);margin-top:4px">90s</div>
+      </div>`;
+      startDrawPlayerTimer(90);
+    }
+    // Update own messages
+    if (q.drawChat?.length > 0) {
+      const chatEl = document.getElementById('draw-chat-area');
+      if (chatEl) {
+        const myMsgs = q.drawChat.filter(m=>m.k===myKey);
+        if (myMsgs.length > 0) {
+          chatEl.innerHTML = [...myMsgs].reverse().map(m=>`<div style="padding:3px 0;color:var(--text)">${m.txt}</div>`).join('');
+        }
+      }
+    }
   }
+}
+
+let _drawPlayerTimer = null;
+function startDrawPlayerTimer(sec) {
+  if (_drawPlayerTimer) clearInterval(_drawPlayerTimer);
+  let t = sec;
+  _drawPlayerTimer = setInterval(()=>{
+    t--;
+    const f=document.getElementById('dw-fill'),cd=document.getElementById('dw-cd');
+    if(f)f.style.width=(t/sec*100)+'%';
+    if(cd)cd.textContent=t+'s';
+    if(t<=0){clearInterval(_drawPlayerTimer);_drawPlayerTimer=null;
+      const inp=document.getElementById('draw-chat-input');
+      const btn=document.querySelector('[onclick="sendDrawChat()"]');
+      if(inp)inp.disabled=true;if(btn)btn.disabled=true;
+    }
+  },1000);
+}
+
+function sendDrawChat() {
+  const inp = document.getElementById('draw-chat-input');
+  if (!inp || !inp.value.trim()) return;
+  const txt = inp.value.trim();
+  inp.value = '';
+  const q = gameState.currentQ;
+  if (!q) return;
+  const newChat = [...(q.drawChat||[]), { k: myKey, txt, ts: Date.now() }];
+  setKey('currentQ', {...q, drawChat: newChat});
 }
 
 function playerMemory(s) {
   if(s.answers?.[myKey]){ playerShowReveal(); return; }
-  document.getElementById('game-body').innerHTML=`<div class="q-card fade">
-    <div class="q-label">🧠 Memory Mayhem</div>
-    <div class="q-text">¿Recuerdas los 6 ítems del principio? Escríbelos todos.</div>
-    <textarea id="mem-input" rows="4" placeholder="Escribe los ítems que recuerdas..."></textarea>
-    <button class="btn btn-red btn-block" onclick="playerAnswerText('mem-input')" style="margin-top:8px">Enviar →</button>
-    <div class="ans-status" id="ans-chips"></div></div>`;
+  const q = s.currentQ;
+  if (!q?.nineItems) {
+    document.getElementById('game-body').innerHTML=`<div class="q-card fade" style="text-align:center;padding:28px"><div class="dots" style="display:flex;justify-content:center"><span></span><span></span><span></span></div><p style="color:var(--muted);margin-top:10px">Cargando...</p></div>`;
+    return;
+  }
+  const nineItems = q.nineItems;
+  let selected = [];
+  const body = document.getElementById('game-body');
+  body.innerHTML=`<div class="q-card fade">
+    <div class="q-label">Memory Mayhem</div>
+    <div class="q-text">Selecciona los 6 ítems que recuerdas haber visto al principio.</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:8px">+100 por acierto · -50 por error · Selecciona exactamente 6</div>
+    <div id="mem-select-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      ${nineItems.map((m,i)=>`
+        <div id="ms-${i}" onclick="toggleMemSelect(${i},'${m.emoji}','${m.label}')"
+          style="background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r2);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s">
+          <div style="font-size:32px">${m.emoji}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${m.label}</div>
+        </div>`).join('')}
+    </div>
+    <div id="mem-count" style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:8px">0 / 6 seleccionados</div>
+    <button id="mem-submit-btn" class="btn btn-red btn-block" onclick="submitMemorySelection()" disabled>Enviar respuesta (selecciona 6)</button>
+    <div class="ans-status" id="ans-chips"></div>
+  </div>`;
   updateAnswerChips(s);
+}
+
+let _memSelected = [];
+function toggleMemSelect(idx, emoji, label) {
+  const el = document.getElementById('ms-'+idx);
+  if (!el) return;
+  const pos = _memSelected.indexOf(emoji);
+  if (pos >= 0) {
+    _memSelected.splice(pos, 1);
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'var(--s2)';
+  } else {
+    if (_memSelected.length >= 6) { notify('Ya seleccionaste 6'); return; }
+    _memSelected.push(emoji);
+    el.style.borderColor = 'var(--blue)';
+    el.style.background = '#0a1830';
+  }
+  const cnt = document.getElementById('mem-count');
+  const btn = document.getElementById('mem-submit-btn');
+  if (cnt) cnt.textContent = _memSelected.length + ' / 6 seleccionados';
+  if (btn) {
+    btn.disabled = _memSelected.length !== 6;
+    btn.textContent = _memSelected.length === 6 ? 'Enviar respuesta' : `Enviar respuesta (selecciona ${6-_memSelected.length} más)`;
+  }
+}
+
+function submitMemorySelection() {
+  if (_memSelected.length !== 6) return;
+  // Auto-score: save selection as JSON
+  playerAnswer(JSON.stringify(_memSelected));
+  // Calculate score immediately for visual feedback
+  const s = gameState;
+  const correct = s.currentQ?.correctItems || [];
+  const hits = _memSelected.filter(e => correct.some(c=>c.emoji===e)).length;
+  const misses = _memSelected.filter(e => !correct.some(c=>c.emoji===e)).length;
+  const pts = hits*100 - misses*50;
+  // Apply score
+  const ns = {...s.scores};
+  ns[myKey] = Math.max(0, (ns[myKey]||0) + pts);
+  setKey('scores', ns);
+  notify(`Enviado: ${hits} aciertos, ${misses} errores → ${pts>=0?'+'+pts:pts} pts`);
 }
 
 function playerBoss(s) {
@@ -1591,7 +2008,7 @@ if (document.readyState === 'loading') {
 function getState(){return gameState||{};}
 function notify(msg,dur=3000){const el=document.createElement('div');el.className='notif';el.textContent=msg;document.getElementById('notif-area').appendChild(el);setTimeout(()=>el.remove(),dur);}
 function updateRoundBadge(idx){const el=document.getElementById('gb-round');if(el&&idx>=0&&idx<ROUNDS.length)el.textContent=`R${idx+1} ${ROUNDS[idx]?.emoji||''}`;}
-function renderScoresBar(s){const el=document.getElementById('gb-scores');if(!el||!s?.scores)return;el.innerHTML=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>`<div class="gbs-item"><span class="gbs-emoji">${PD[k].emoji}</span><span class="gbs-pts">${pts}</span></div>`).join('');}
+function renderScoresBar(s){const el=document.getElementById('gb-scores');if(!el||!s?.scores)return;el.innerHTML=Object.entries(s.scores).sort((a,b)=>b[1]-a[1]).map(([k,pts])=>`<div class="gbs-item"><span class="gbs-emoji">${PD[k].emoji}</span><span class="gbs-pts">${pts}</span></div>`).join('');renderPtsPanel();}
 function updateAnswerChips(s){const el=document.getElementById('ans-chips');if(!el)return;el.innerHTML=Object.entries(PD).map(([k,p])=>`<div class="as-chip"><div class="as-dot ${s.answers?.[k]?'on':''}"></div>${p.emoji} ${p.name}</div>`).join('');}
 
 function addNextBtn(){
