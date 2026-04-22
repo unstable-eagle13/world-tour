@@ -232,6 +232,21 @@ label{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppe
 @keyframes flyAround{0%{transform:translateX(-40px) rotate(-5deg)}50%{transform:translateX(40px) rotate(5deg)}100%{transform:translateX(-40px) rotate(-5deg)}}
 .champion-reveal{opacity:0;transform:translateY(20px);transition:all .6s ease}
 .champion-reveal.show{opacity:1;transform:translateY(0)}
+.speech-bubble{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;margin-top:12px}
+.speech-pos{font-size:15px;line-height:1.8;color:var(--text)}
+.speech-roasts{font-size:13px;line-height:2;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.rainbow-text{animation:rainbowShift 2s linear infinite;font-weight:700;font-size:1.1em}
+@keyframes rainbowShift{
+  0%{color:#ff2d55}10%{color:#ff9f0a}20%{color:#ffd60a}30%{color:#30d158}
+  40%{color:#0a84ff}50%{color:#bf5af2}60%{color:#ff2d55}70%{color:#ff9f0a}
+  80%{color:#ffd60a}90%{color:#30d158}100%{color:#ff2d55}
+}
+.flash-winner{animation:flashWinner 0.8s ease infinite alternate;font-family:'Bebas Neue',sans-serif;font-size:1.3em;letter-spacing:.04em}
+@keyframes flashWinner{from{color:var(--gold);text-shadow:0 0 20px rgba(255,214,10,.6)}to{color:#fff;text-shadow:0 0 40px rgba(255,214,10,.3)}}
+.roast-burn{color:#ff9f0a}.roast-rave{color:#0a84ff}.roast-felipe{color:#ff2d55}
+.roast-name{font-weight:700;font-size:1.05em}
+.podium-done{animation:slideUp .5s ease both}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes glitch{
   0%{transform:translate(0);color:var(--red)}
   20%{transform:translate(-3px,1px);color:var(--gold)}
@@ -586,13 +601,17 @@ function onStateUpdate(prev, s) {
     if (s.phase === 'chaos') { playerShowChaos(); return; }
   }
 
-  // currentQ arrived late OR changed (new jeopardy question)
+  // currentQ arrived late OR changed (new sub-round within same phase)
   if (s.phase === 'question' && s.currentQ) {
     if (!prev?.currentQ) { playerShowQuestion(s); return; }
-    // Jeopardy: new question picked by host
-    if (ROUNDS[s.roundIndex]?.type === 'jeopardy' &&
-        JSON.stringify(s.currentQ) !== JSON.stringify(prev?.currentQ)) {
-      playerJeopardy(s); return;
+    // Detect any meaningful change to currentQ (new describe/draw turn, new jeopardy question)
+    const rt = ROUNDS[s.roundIndex]?.type;
+    const qChanged = s.currentQ.turn !== prev?.currentQ?.turn ||
+                     s.currentQ.drawer !== prev?.currentQ?.drawer ||
+                     s.currentQ.cat !== prev?.currentQ?.cat ||
+                     s.currentQ.pts !== prev?.currentQ?.pts;
+    if (qChanged && ['describe','draw','jeopardy'].includes(rt)) {
+      playerShowQuestion(s); return;
     }
   }
 
@@ -782,8 +801,9 @@ function renderMemWarnScreen(items) {
     <div class="mem-grid" id="mw-items-grid">${items.map(m=>`<div class="mem-item"><div class="mem-emoji">${m.emoji}</div><div class="mem-label">${m.label}</div></div>`).join('')}</div>
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
     <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
-    <div class="host-controls" style="margin-top:10px">
+    <div class="host-controls" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-ghost" onclick="refreshMemItems()" style="font-size:12px">↺ Cambiar símbolos</button>
+      <button class="btn btn-red" style="font-size:12px" onclick="skipMemWarn()">Siguiente juego ⏭</button>
     </div>
   </div>`;
   _memWarnTimerIv = setInterval(()=>{
@@ -804,16 +824,22 @@ function renderMemWarnScreen(items) {
 }
 
 function refreshMemItems() {
-  // Pick a different pool than current
   const currentStr = JSON.stringify(gameState.memItems);
   let newPool = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
-  // Try to get a different one
   for(let i=0; i<10; i++) {
     if(JSON.stringify(newPool) !== currentStr) break;
     newPool = MEMORY_POOLS[Math.floor(Math.random()*MEMORY_POOLS.length)];
   }
   renderMemWarnScreen(newPool);
-  notify('Símbolos actualizados');
+  notify('Simbolos actualizados');
+}
+
+function skipMemWarn() {
+  if (_memWarnTimerIv) { clearInterval(_memWarnTimerIv); _memWarnTimerIv = null; }
+  showNavPanel({
+    onPrevGame: gameState.roundIndex>0 ? ()=>hostRunRound(gameState.roundIndex-1) : null,
+    onNextGame: ()=>nextRound()
+  });
 }
 
 // HOT TAKES - local htIdx
@@ -1513,7 +1539,18 @@ function revealMarioCard(idx){
           <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--green)">+${card.pts}</span></div>`;
         log.insertBefore(e,log.firstChild);
       }
-      if(_marioRevealed>=4) setTimeout(()=>hostEndGame(),3500);
+      if(_marioRevealed>=4) {
+        setTimeout(()=>{
+          const log=document.getElementById('mario-log');
+          if(log){
+            const btn=document.createElement('button');
+            btn.style.cssText='width:100%;padding:18px;background:var(--gold);color:#000;border:none;border-radius:var(--r);cursor:pointer;font-family:Bebas Neue,sans-serif;font-size:24px;letter-spacing:.05em;margin-top:8px';
+            btn.textContent='Ver resultados finales';
+            btn.onclick=()=>hostEndGame();
+            log.appendChild(btn);
+          }
+        }, 2000);
+      }
       return;
     }
     const p=players[Math.floor(Math.random()*3)];
@@ -1527,9 +1564,9 @@ function revealMarioCard(idx){
 function hostEndGame() {
   const s = getState();
   patch({ phase:'end', scores: s.scores });
-  const sorted = Object.entries(s.scores).sort((a,b)=>a[1]-b[1]); // worst first
-  const winner = sorted[sorted.length-1][0];
-  const loser  = sorted[0][0];
+  const sorted = Object.entries(s.scores).sort((a,b)=>b[1]-a[1]); // best first
+  const winner = sorted[0][0];
+  const loser  = sorted[sorted.length-1][0];
 
   document.getElementById('game-body').innerHTML=`
     <div class="fade" style="display:flex;flex-direction:column;gap:16px;padding:8px 0">
@@ -1562,8 +1599,8 @@ function hostEndGame() {
 
   // Reveal positions one by one, worst → best, with delay
   const lbEl = document.getElementById('lb-reveal');
-  const medals = ['🥉','🥈','🥇']; // worst=bronze, best=gold
-  const rowClasses = ['r3','r2','r1'];
+  const medals = ['🥇','🥈','🥉']; // best=gold, worst=bronze
+  const rowClasses = ['r1','r2','r3'];
   sorted.forEach(([k,pts], i) => {
     setTimeout(() => {
       const row = document.createElement('div');
@@ -1585,7 +1622,16 @@ function hostEndGame() {
     setTimeout(() => {
       const ab = document.getElementById('ai-end-bubble');
       if (ab) ab.style.display = 'block';
-      hostGetAI(`El juego terminó. ${PD[winner].name} ganó con ${s.scores[winner]} puntos — el campeón supremo del World Tour. ${PD[loser].name} quedó último con ${s.scores[loser]} puntos. Da el discurso de cierre más épico y brutal. Destruye al perdedor. Coronar al ganador. Usa todo lo que sabes de cada uno.`);
+      // Show "reveal speech" button instead of auto-playing speech
+      setTimeout(() => {
+        const ab = document.getElementById('ai-end-bubble');
+        if (ab) {
+          ab.style.display = 'block';
+          ab.innerHTML = `<button onclick="deliverEndSpeech('${winner}','${sorted[1][0]}','${loser}')" style="width:100%;padding:16px;background:var(--s2);border:1px solid var(--purple);border-radius:var(--r);cursor:pointer;font-size:14px;color:var(--purple);font-weight:600;transition:all .2s" onmouseover="this.style.background='#1a0a2e'" onmouseout="this.style.background='var(--s2)'">
+            🎙️ El AI Host tiene algo que decir... presiona aqui para escucharlo
+          </button>`;
+        }
+      }, 500);
     }, 2500);
   }, sorted.length * 1200 + 500);
 }
@@ -1612,12 +1658,12 @@ function playerShowReveal() {
 }
 
 function playerShowEnd(s) {
-  const sorted = Object.entries(s.scores||{}).sort((a,b)=>a[1]-b[1]);
-  const winner = sorted[sorted.length-1][0];
-  const medals = ['🥉','🥈','🥇'];
-  const rowClasses = ['r3','r2','r1'];
+  const sorted = Object.entries(s.scores||{}).sort((a,b)=>b[1]-a[1]);
+  const winner = sorted[0][0];
+  const medals = ['🥇','🥈','🥉'];
+  const rowClasses = ['r1','r2','r3'];
   document.getElementById('game-body').innerHTML=`<div class="fade" style="display:flex;flex-direction:column;gap:14px;padding:8px 0">
-    <div style="text-align:center;padding:16px 0"><div class="display" style="font-size:24px;color:var(--muted)">RESULTADOS FINALES</div></div>
+    <div style="text-align:center;padding:16px 0"><div class="display rainbow-text" style="font-size:28px">RESULTADOS FINALES</div></div>
     <div class="lb-wrap">${sorted.map(([k,pts],i)=>`<div class="lb-row ${rowClasses[i]}"><div class="lb-rank">${medals[i]}</div><div class="lb-emoji">${PD[k].emoji}</div><div class="lb-name">${PD[k].name}</div><div class="lb-score">${pts} pts</div></div>`).join('')}</div>
     <div class="plane-scene">
       <div style="font-size:13px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em">Campeón Supremo</div>
@@ -1699,13 +1745,17 @@ function playerShowQuestion(s) {
 }
 
 let _playerMemWarnItems = null;
+let _playerMemWarnIv = null;
 function playerMemWarn(s) {
   const items = s.memItems || MEMORY_POOLS[0];
-  // If items changed (host refreshed), re-render
   const itemsStr = JSON.stringify(items);
   const needsRerender = _playerMemWarnItems !== itemsStr;
   _playerMemWarnItems = itemsStr;
-  if (!needsRerender && document.getElementById('mw-fill')) return; // already showing, don't restart
+  // Always kill old timer before deciding what to do
+  if (_playerMemWarnIv) { clearInterval(_playerMemWarnIv); _playerMemWarnIv = null; }
+  if (!needsRerender && document.getElementById('mw-fill')) {
+    // Same items, timer already running — just restart it cleanly
+  }
   let t=30;
   document.getElementById('game-body').innerHTML=`<div class="q-card fade">
     <div style="text-align:center;padding:8px 0"><div style="font-size:48px;margin-bottom:8px">👁️</div>
@@ -1714,7 +1764,13 @@ function playerMemWarn(s) {
     <div class="timer-bar" style="margin-top:12px"><div class="timer-fill ok" id="mw-fill" style="width:100%"></div></div>
     <div id="mw-cd" style="text-align:center;font-size:13px;color:var(--muted);margin-top:6px">30s</div>
   </div>`;
-  const iv=setInterval(()=>{ t--; const f=document.getElementById('mw-fill'),cd=document.getElementById('mw-cd'); if(f)f.style.width=(t/30*100)+'%'; if(cd)cd.textContent=t+'s'; if(t<=0)clearInterval(iv); },1000);
+  _playerMemWarnIv = setInterval(()=>{
+    t--;
+    const f=document.getElementById('mw-fill'), cd=document.getElementById('mw-cd');
+    if(f) f.style.width=(t/30*100)+'%';
+    if(cd) cd.textContent=t+'s';
+    if(t<=0) { clearInterval(_playerMemWarnIv); _playerMemWarnIv=null; }
+  }, 1000);
 }
 
 function playerHotTakes(s) {
@@ -2170,7 +2226,8 @@ Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas
     const data=await res.json();
     bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${data.content?.[0]?.text||'Sin palabras.'}</div>`;
   } catch {
-    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">Hasta el servidor se avergüenza de ustedes.</div>`;
+    const _fb=['El host está en el baño. Vuelve en un momento.','Error 404: comentario cruel no encontrado. Improvisen.','El host se quedó sin palabras. Eso dice más de ustedes que cualquier insulto.','Conexión interrumpida. Probablemente culpa de Burns.'];
+    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${_fb[Math.floor(Math.random()*_fb.length)]}</div>`;
   }
   if(callback)setTimeout(callback,2500);
 }
@@ -2178,6 +2235,80 @@ Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas
 // ═══════════════════════════════════════════
 //   UI UTILS
 // ═══════════════════════════════════════════
+function deliverEndSpeech(winner, second, loser) {
+  const ab = document.getElementById('ai-end-bubble');
+  if (!ab) return;
+  ab.innerHTML = ''; // clear the button
+
+  const roasts = {
+    burns: `<span class="roast-burn"><span class="roast-name">Burns</span>, que modificó su Escarabajo del 65 para que fuera mas deportivo... y aun asi fue el mas lento del grupo esta noche. Ni turbo lo salva.</span>`,
+    rave:  `<span class="roast-rave"><span class="roast-name">Rave</span> planeó todo "eficientemente" y de todas formas no funcionó. Igual que el Chelsea: mucho presupuesto, cero resultados, y siempre una excusa lista.</span>`,
+    felipe:`<span class="roast-felipe"><span class="roast-name">Felipe</span> sobrevivió gracias a los dinosaurios, probablemente. O a Magic: The Gathering. De cualquier forma, ninguna de las dos cosas lo hace socialmente aceptable.</span>`
+  };
+
+  ab.innerHTML = `
+    <div class="speech-bubble podium-done">
+      <div class="speech-pos">
+        En tercer lugar, con una actuación que solo puede describirse como 'presente':
+        <strong style="color:var(--red)">${PD[loser].emoji} ${PD[loser].name}</strong>.
+        La humanidad ha fallado.<br><br>
+        <strong style="color:var(--muted)">${PD[second].emoji} ${PD[second].name}</strong>
+        quedó de segundo, lo cual es básicamente el primer perdedor. Felicitaciones por eso.<br><br>
+        Y el <span class="rainbow-text">Campeón Supremo del World Tour</span>...<br>
+        <span class="flash-winner">${PD[winner].emoji} ${PD[winner].name}</span><br>
+        <span style="font-size:13px;color:var(--muted)">El mismo que probablemente ya está calculando su estrategia para la próxima partida. Algunos nunca cambian.</span>
+      </div>
+      <div class="speech-roasts">
+        ${roasts.burns}<br>
+        ${roasts.rave}<br>
+        ${roasts.felipe}
+      </div>
+    </div>`;
+
+  setTimeout(() => {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'width:100%;padding:14px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:14px;color:var(--muted);margin-top:12px;transition:all .2s;font-family:DM Sans,sans-serif';
+    btn.textContent = 'Dominacion Mundial lograda... quieres jugar de nuevo?';
+    btn.onmouseover=()=>{btn.style.borderColor='var(--red)';btn.style.color='var(--text)';};
+    btn.onmouseout=()=>{btn.style.borderColor='var(--border)';btn.style.color='var(--muted)';};
+    btn.onclick=()=>confirmReplay(winner);
+    ab.insertAdjacentElement('afterend', btn);
+  }, 3500);
+}
+
+function confirmReplay(winnerKey) {
+  const name = PD[winnerKey]?.name || 'el campeon';
+  const emoji = PD[winnerKey]?.emoji || '';
+  const overlay = document.createElement('div');
+  overlay.id = 'replay-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:28px 24px;max-width:380px;width:100%;text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">${emoji}</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);margin-bottom:12px">¿Estás seguro?</div>
+    <p style="font-size:14px;color:var(--text);line-height:1.6;margin-bottom:20px">
+      ¿Seguro quieres que <strong style="color:var(--gold)">${name}</strong> pierda su título de<br>
+      <em style="color:var(--gold)">Campeón Supremo del World Tour</em>?<br><br>
+      Si es así, presiona <strong>'Estoy de acuerdo'</strong>.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="doReplay()" style="padding:14px;background:var(--red);color:#fff;border:none;border-radius:var(--r2);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600">
+        Estoy de acuerdo
+      </button>
+      <button onclick="document.getElementById('replay-overlay').remove()" style="padding:12px;background:var(--s2);color:var(--muted);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;font-size:13px">
+        Cancelar — que ${name} conserve su corona
+      </button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function doReplay() {
+  document.getElementById('replay-overlay')?.remove();
+  saveSession(null, null);
+  socket.emit('reset');
+  location.reload();
+}
+
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');}
 
 // Initialize socket after DOM is ready and socket.io library is loaded
