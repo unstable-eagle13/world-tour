@@ -1185,7 +1185,7 @@ function hostRevealDescribe(winnerKey) {
   renderScoresBar(getState());
   descTurnLocal++;
   hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} la palabra "${q.word}". Juzga brutalmente las habilidades descriptivas.`,()=>{
-    showNavPanel({onNextQ:descTurnLocal<9()=>{patch({answers:{},descChat:[]});hostDescribeRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    showNavPanel({onNextQ:()=>{patch({answers:{},descChat:[]});hostDescribeRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
@@ -1260,7 +1260,7 @@ function hostRevealDraw(winnerKey) {
   renderScoresBar(getState());
   drawTurnLocal++;
   hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} el dibujo "${q.word}". Critica el arte y las habilidades de adivinanza.`,()=>{
-    showNavPanel({onNextQ:descTurnLocal<9()=>{patch({answers:{},drawData:null,drawChat:[]});hostDrawRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    showNavPanel({onNextQ:()=>{patch({answers:{},drawData:null,drawChat:[]});hostDrawRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
