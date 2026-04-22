@@ -358,18 +358,12 @@ const ROUNDS = [
   { id:'boss',       name:'FINAL BOSS',             emoji:'💀', type:'boss',       desc:'Muerte súbita. Puntos dobles. El host se vuelve villano.' }
 ];
 
-// 7 hot takes — shuffled at round start, played in random order, no repeats
-const HOT_TAKES_MASTER = [
-  { q:'La gente que duerme boca abajo tiene algo que esconder.', correct:'A favor', reason:'El 94% de los asesinos en serie duermen boca abajo. Datos de la Universidad de Nohay, no se puede refutar.' },
-  { q:'Las personas que ponen alarmas en números como 7:13 son psicológicamente inestables.', correct:'A favor', reason:'¿7:13? ¿Por qué ese minuto exacto? Eso es la mente de alguien que necesita control absoluto sobre su caos interno.' },
-  { q:'Pagar más de $6 por un café es señal de que algo salió mal en tu vida.', correct:'A favor', reason:'Un café de $9 no te hace sofisticado. Te hace víctima. El tinto de $0.50 logra exactamente lo mismo: mantenerte vivo otro día.' },
-  { q:'Los que dicen trabajo para vivir no vivo para trabajar son los más aburridos en una fiesta.', correct:'A favor', reason:'Si tu identidad es no tener identidad, ya dijiste todo. Felicitaciones por ser un protector de pantalla humano.' },
-  { q:'La gente que lee libros físicos en público lo hace para que la vean leyendo.', correct:'A favor', reason:'Si lees en silencio en casa, eso es hobbit. Si lees en un café con el libro bien visible y cara pensativa, eso es marketing personal.' },
-  { q:'Dormir más de 9 horas es una señal de debilidad moral.', correct:'En contra', reason:'Dormir 10 horas es el mayor flex de que tu vida está tan bajo control que nada te quita el sueño. Los que duermen poco solo tienen mala gestión del estrés.' },
-  { q:'Las personas que no pueden decidir qué pedir en un restaurante deberían comer en casa.', correct:'A favor', reason:'20 minutos mirando el menú y preguntas qué recomiendas — ya perdiste el privilegio de la vida social.' }
+// 3 hot takes (all used, in order)
+const HOT_TAKES = [
+  { q:'La gente que duerme boca abajo tiene algo que esconder.', correct:'A favor', reason:'El 94% de los asesinos en serie duermen boca abajo. Datos de la Universidad de Nohay, irrefutable.' },
+  { q:'Pagar más de $6 por un café es señal de que algo salió mal en tu vida.', correct:'A favor', reason:'Un café de $9 no te hace sofisticado. Te hace víctima. El tinto de $0.50 logra exactamente lo mismo: mantenerte vivo otro día miserable.' },
+  { q:'La gente que lee libros físicos en público lo hace para que la vean leyendo.', correct:'A favor', reason:'Si lees en silencio en casa eso es hobbit. Si lees en un café con cara pensativa y el libro bien visible, eso es marketing personal de bajo presupuesto.' }
 ];
-let HOT_TAKES = [...HOT_TAKES_MASTER];
-let _htPlayed = new Set();
 
 // 7 WYR — host navigates freely
 const WYR_LIST = [
@@ -408,8 +402,22 @@ const JEOPARDY_DATA = {
   ]
 };
 
-const DESCRIBE_WORDS = ['Escarabajo volkswagen del 65','Un hombre llorando en un partido de fútbol','Felipe perdiendo en Magic: The Gathering','Rave planeando algo "eficiente"','Burns explicando el motor de su carro','Un loro repitiendo pensamientos inapropiados','Alguien armando un mueble de IKEA llorando','Un sommelier snob en Bogotá','Jugador de Rainbow Six reportado por sus compañeros','Una paloma que en realidad es un dron del gobierno'];
-const DRAW_WORDS = ['Un pene con sombrero elegante','Transformer en el baño','Dinosaurio jugando Magic the Gathering','Escarabajo volador de guerra','Cerebro de vacaciones en la playa','Paloma espía del gobierno con audífonos','Carro deportivo hecho de queso','Alien viendo fútbol con camiseta del Real Madrid','Mueble de IKEA que se rindió','Felipe ganando algo por accidente'];
+const DESCRIBE_WORDS = [
+  'Burns en un vuelo comercial interrumpiendo al piloto por el intercomunicador para explicarle que está aterrizando mal',
+  'El médico de urgencias que ya lleva 12 años sin sorprenderse explicando cómo alguien metió una bota completa, con cordones, en su recto',
+  'Un loro en un juzgado que repite con lujo de detalle todo lo que escuchó en la orgía del sábado, frente al juez',
+  'Un youtuber reseñando consoladores industriales con cara seria, vocabulario técnico y calificación de cinco estrellas',
+  'El veterinario explicando con señas y eufemismos por qué el perro se lamió tanto sus partes íntimas que ahora necesita el cono',
+  'Rave llorando en el estadio abrazado a un desconocido después de que Chelsea perdió 4-0'
+];
+const DRAW_WORDS = [
+  'Pene con mullet y sombrero vaquero montando un caballo al atardecer con cara de héroe de película',
+  'Alien con forma de espermatozoide haciéndose selfie feliz frente a la Torre Eiffel con boina francesa',
+  'Espermatozoide con corbata y maletín presentando un PowerPoint titulado Q3 Results en sala de juntas',
+  'Pene con toga y birrete recibiendo su diploma, llorando de emoción, familia aplaudiendo en las gradas',
+  'Rave en calzoncillos, llorando, rodeado de botellas vacías',
+  'Burns en traje de Top Gun'
+];
 
 // Pool of memory item sets — one chosen randomly each game
 const MEMORY_POOLS = [
@@ -742,13 +750,13 @@ function hostStartGame() {
 function resetGame(){if(!confirm('Reiniciar?'))return;saveSession(null,null);socket.emit('reset');location.reload();}
 // KEY FIX: sub-round indices LOCAL on host, never synced => eliminates infinite loop race condition
 let timerInt=null,htIdx=0,wyrIdx=0,ccIdx=0,descTurnLocal=0,drawTurnLocal=0,roundHistory={};
-let _usedDescWords=new Set(),_usedDrawWords=new Set();
+let _usedDescWords=new Set(),_usedDrawWords=new Set(),_lastDescPlayer=null,_lastDrawPlayer=null;
 function hostRunRound(idx){
   if(idx>=ROUNDS.length){hostEndGame();return;}
   if(timerInt)clearInterval(timerInt);
   const rtype=ROUNDS[idx].type;
-  if(rtype==='hot_takes'){htIdx=0;HOT_TAKES=[...HOT_TAKES_MASTER].sort(()=>Math.random()-0.5);_htPlayed=new Set();}if(rtype==='wyr')wyrIdx=0;
-  if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe'){descTurnLocal=0;_usedDescWords=new Set();}if(rtype==='draw'){drawTurnLocal=0;_usedDrawWords=new Set();}
+  if(rtype==='hot_takes')htIdx=0;if(rtype==='wyr')wyrIdx=0;
+  if(rtype==='conspiracy')ccIdx=0;if(rtype==='describe'){descTurnLocal=0;_usedDescWords=new Set();_lastDescPlayer=null;}if(rtype==='draw'){drawTurnLocal=0;_usedDrawWords=new Set();_lastDrawPlayer=null;}
   patch({roundIndex:idx,phase:'intro',answers:{},buzzed:null,buzzOrder:[],jepResponses:[],currentQ:null,drawData:null});
   updateRoundBadge(idx);
   const r=ROUNDS[idx];
@@ -850,13 +858,7 @@ function skipMemWarn() {
 
 // HOT TAKES - local htIdx
 function hostHotTakes(){
-  // Skip already-played questions
-  while(htIdx<HOT_TAKES.length && _htPlayed.has(htIdx)) htIdx++;
-  if(htIdx>=HOT_TAKES.length){
-    document.getElementById('game-body').innerHTML=`<div class="q-card fade"><div class="q-label" style="color:var(--red)">Hot Takes completadas</div><p style="font-size:14px;color:var(--muted)">Jugaron las ${HOT_TAKES.length} preguntas. Impressive.</p></div>`;
-    showNavPanel({onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
-    return;
-  }
+  if(htIdx>=HOT_TAKES.length) htIdx=0;
   const q=HOT_TAKES[htIdx],ci=htIdx;
   patch({phase:'question',currentQ:q,answers:{}});
   document.getElementById('game-body').innerHTML=`
@@ -873,9 +875,6 @@ function hostHotTakes(){
 }
 function hostRevealHotTake(){
   const s=gameState,q=s.currentQ;if(!q)return;
-  // Guard: don't re-award points for a question already played
-  if(_htPlayed.has(htIdx)){notify('Esta pregunta ya fue jugada');return;}
-  _htPlayed.add(htIdx);
   const ns={...s.scores};
   const rows=Object.entries(s.answers||{}).map(([k,v])=>{const w=v.toLowerCase().includes(q.correct.toLowerCase());if(w)ns[k]=(ns[k]||0)+100;return{k,v,w};});
   patch({phase:'reveal',scores:ns});
@@ -883,10 +882,11 @@ function hostRevealHotTake(){
   renderScoresBar(getState());
   saveHistory('hot_takes',htIdx,q.q,rows);
   const ci=htIdx;htIdx++;
-  const remaining=HOT_TAKES.length-_htPlayed.size;
+  if(htIdx>=HOT_TAKES.length) htIdx=0;
   hostGetAI(`HT${ci+1} veredicto: "${q.correct}". ${rows.map(({k,v})=>`${PD[k].name} voto ${v}`).join(', ')}. Destruye a los que fallaron.`,()=>{
     showNavPanel({
-      onNextQ:remaining>0?()=>hostHotTakes():null,
+      onPrevQ:ci>0?()=>{htIdx=Math.max(0,ci-1);patch({answers:{}});hostHotTakes();}:null,
+      onNextQ:()=>hostHotTakes(),
       onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,
       onNextGame:()=>nextRound()
     });
@@ -1114,7 +1114,7 @@ function hostRevealConspiracy(){
     });
   });
 }
-// ── DESCRIBE IT — fixed order: Felipe → Rave → Burns, then repeats ──
+// ── DESCRIBE IT — fixed order: Felipe→Rave→Burns, repeats; DRAW: Burns→Rave→Felipe ──
 const DESC_ORDER = ['felipe','rave','burns'];
 const DRAW_ORDER = ['burns','rave','felipe'];
 function pickUnusedWord(list,used){const u=list.filter(w=>!used.has(w));const pool=u.length>0?u:list;const w=pool[Math.floor(Math.random()*pool.length)];used.add(w);return w;}
@@ -1199,11 +1199,11 @@ function hostRevealDescribe(winnerKey) {
   renderScoresBar(getState());
   descTurnLocal++;
   hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} la palabra "${q.word}". Juzga brutalmente las habilidades descriptivas.`,()=>{
-    showNavPanel({onNextQ:descTurnLocal<3?()=>{patch({answers:{},descChat:[]});hostDescribeRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    showNavPanel({onNextQ:()=>{patch({answers:{},descChat:[]});hostDescribeRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
-// ── DRAW & DESTROY — fixed order: Burns → Rave → Felipe, then repeats ──
+// ── DRAW & DESTROY — 3 turns ──
 let _drawTimerInterval = null;
 function hostDrawRound() {
   const turn=drawTurnLocal;
@@ -1273,7 +1273,7 @@ function hostRevealDraw(winnerKey) {
   renderScoresBar(getState());
   drawTurnLocal++;
   hostGetAI(`${winnerKey?PD[winnerKey].name+' adivino':'Nadie adivino'} el dibujo "${q.word}". Critica el arte y las habilidades de adivinanza.`,()=>{
-    showNavPanel({onNextQ:drawTurnLocal<3?()=>{patch({answers:{},drawData:null,drawChat:[]});hostDrawRound();}:null,onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
+    showNavPanel({onNextQ:()=>{patch({answers:{},drawData:null,drawChat:[]});hostDrawRound();},onPrevGame:gameState.roundIndex>0?()=>hostRunRound(gameState.roundIndex-1):null,onNextGame:()=>nextRound()});
   });
 }
 
@@ -1896,9 +1896,10 @@ function playerDescribe(s) {
   if(isMe){
     // Drawer: see countdown then word is revealed
     const body = document.getElementById('game-body');
-    if (!body.querySelector('.q-card')) {
-      body.innerHTML=`<div class="q-card fade">
-        <div class="q-label">Tu turno de describir (${(q.turn||0)+1}/3)</div>
+    const _existDescDrawerTurn = body.querySelector('[data-desc-turn]')?.dataset.descTurn;
+    if (_existDescDrawerTurn !== String(q.turn)) {
+      body.innerHTML=`<div class="q-card fade" data-desc-turn="${q.turn}">
+        <div class="q-label">Tu turno de describir (Turno ${(q.turn||0)+1})</div>
         <div id="drawer-reveal-area" style="text-align:center;padding:20px 0">
           <div style="font-size:14px;color:var(--muted);margin-bottom:8px">La palabra se revela en...</div>
           <div id="drawer-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">3</div>
@@ -1995,9 +1996,10 @@ function playerDraw(s) {
   const isMe = q.drawer===myKey;
   if(isMe){
     const body = document.getElementById('game-body');
-    if (!body.querySelector('.q-card')) {
-      body.innerHTML=`<div class="q-card fade">
-        <div class="q-label">Tu turno de dibujar (${(q.turn||0)+1}/3)</div>
+    const _existDrawDrawerTurn = body.querySelector('[data-draw-turn]')?.dataset.drawTurn;
+    if (_existDrawDrawerTurn !== String(q.turn)) {
+      body.innerHTML=`<div class="q-card fade" data-draw-turn="${q.turn}">
+        <div class="q-label">Tu turno de dibujar (Turno ${(q.turn||0)+1})</div>
         <div id="draw-reveal-area" style="text-align:center;padding:16px 0">
           <div style="font-size:14px;color:var(--muted);margin-bottom:8px">El prompt se revela en...</div>
           <div id="draw-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:72px;color:var(--red)">3</div>
@@ -2212,257 +2214,35 @@ function setSize(s,el){dSize=s;if(dCtx)dCtx.lineWidth=s;document.querySelectorAl
 function clearDraw(){const canvas=document.getElementById('draw-canvas');if(dCtx&&canvas){dCtx.fillStyle='#fff';dCtx.fillRect(0,0,canvas.width,canvas.height);}}
 
 // ═══════════════════════════════════════════
-//   HOST COMMENT POOLS (no API needed)
+//   AI HOST
 // ═══════════════════════════════════════════
-const HOST_LINES = {
-  mem_warn: [
-    "Memoricen bien porque cuando fallen voy a leer sus respuestas en voz alta y todos vamos a llorar de vergüenza ajena. Principalmente de la de Felipe.",
-    "Tienen 30 segundos. Burns ya está mirando el vino imaginario que se va a tomar para olvidar esto.",
-    "Seis ítems. Ni Felipe con toda su 'estrategia de Magic' va a sobrevivir esto.",
-    "Atención máxima. Aunque sé que Rave ya está planeando cómo desconectarse mentalmente antes de que acabe el timer.",
-    "Memoricen. O no. Igual las consecuencias las paga Burns con su autoestima de Escarabajo del 65.",
-    "Esto es fácil. A menos que seas Felipe, en cuyo caso tu cerebro está ocupado calculando mazos de Magic que nadie más quiere escuchar.",
-  ],
-  hot_takes_intro: [
-    "Una afirmación. Dos opciones. Cero oportunidades de que Felipe no lo arruine.",
-    "Vamos con una hot take. Piensen bien antes de votar, aunque sé que eso es mucho pedir.",
-    "Esta pregunta tiene una respuesta correcta. Spoiler: la que voten Rave y Burns probablemente no es.",
-    "Opinen con fuerza. Después no lloren cuando el veredicto los destruya.",
-    "Aquí nadie tiene razón todavía, pero en treinta segundos uno de ustedes va a quedar como idiota certificado.",
-    "Una pregunta sencilla para mentes... bueno, para las mentes que tenemos disponibles esta noche.",
-  ],
-  hot_takes_reveal: [
-    "Y el veredicto está en. Algunos fallaron. No voy a decir quién, pero sí voy a reírme.",
-    "Fascinante. Al menos uno de ustedes votó con el instinto de un pez de colores.",
-    "El resultado habla solo. Y lo que dice no es muy favorecedor para nadie en esta pantalla.",
-    "Correcto o incorrecto, igual los dos van a defender su voto hasta la muerte. Clásico.",
-    "Maravilloso espectáculo de mediocridad democrática. Muy orgulloso de todos.",
-    "El que falló sabe quién es. Y todos los demás también.",
-  ],
-  hot_takes_reveal_felipe_wrong: [
-    "Felipe votó mal. Qué sorpresa. El mismo que cree que su mazo de Magic es 'competitivo' no puede votar bien una hot take.",
-    "Felipe erró. Probablemente estaba pensando en un dinosaurio mientras votaba.",
-    "Felipe confundido otra vez. Rainbow Six le ha dañado el juicio.",
-  ],
-  hot_takes_reveal_rave_wrong: [
-    "Rave falló. El que 'solo quiere desconectarse' resulta que tampoco sabe nada cuando está conectado.",
-    "Rave equivocado. Claro, es difícil opinar bien cuando uno vive huyendo de sus propias decisiones.",
-    "Rave votó mal. London is calling, pero el sentido común no contesta.",
-  ],
-  hot_takes_reveal_burns_wrong: [
-    "Burns se equivocó. El sommelier de Bogotá no pudo con una pregunta de opinión. Impresionante.",
-    "Burns falló. El Escarabajo del 65 tiene mejor criterio que su dueño, y eso que es un carro.",
-    "Burns erró. Dedica más tiempo a hablar del motor de ese carro que a pensar.",
-  ],
-  wyr_intro: [
-    "Dos opciones horribles. Elijan la menos horrible. Si es que existe.",
-    "Would You Rather. La prueba científica de hasta dónde llega la dignidad de cada uno.",
-    "Lean bien ambas opciones. Después no digan que no las advirtieron.",
-    "Esta pregunta no tiene respuesta buena. Solo respuestas que dicen mucho de quién la da.",
-    "Piensen con cuidado. O no. Con el historial de decisiones de esta noche, da igual.",
-  ],
-  wyr_reveal: [
-    "Y eligieron. Los resultados me dan más información de ustedes de la que quería tener.",
-    "Interesante. La mayoría escogió lo que escogería alguien con exactamente ese nivel de criterio.",
-    "Las elecciones hablan solas. Y lo que dicen no es muy tranquilizador.",
-    "Bien. Ahora todos sabemos cosas que no podemos desaprender.",
-    "Fascinante ventana al alma de cada uno. Ventana que da a un callejón oscuro.",
-  ],
-  jeopardy_intro: [
-    "Jeopardy. El juego donde la ignorancia tiene consecuencias económicas. Bienvenidos a su ambiente natural.",
-    "Aquí se pierde plata por no saber cosas básicas. Prepárense, Burns.",
-    "Categorías. Preguntas. Y una cantidad alarmante de puntos en juego para el nivel que han demostrado.",
-    "Jeopardy. Donde Felipe va a intentar aplicar 'estrategia de Magic' a preguntas de cultura general. No va a funcionar.",
-  ],
-  conspiracy_intro: [
-    "Teorías de conspiración. El único momento del juego donde estar equivocado es la jugada correcta.",
-    "Conspiracy Corner. Donde la paranoia tiene puntos y el sentido común no sirve de nada.",
-    "Conspiraciones reales, respuestas falsas, y jugadores que van a apostar por la más absurda porque 'suena bien'.",
-    "Aquí gana el que piensa más raro. Burns tiene ventaja por razones que prefiero no mencionar.",
-  ],
-  conspiracy_reveal: [
-    "La verdad está afuera. Aunque con este grupo, claramente también adentro les cuesta encontrarla.",
-    "Y así fue. Algunos lo sabían. La mayoría apostó con la confianza que solo da la ignorancia total.",
-    "El veredicto conspirativo está dado. No diré quién acertó, pero sí diré quién definitivamente no.",
-    "Fascinante. La realidad una vez más superó la capacidad de análisis del grupo.",
-  ],
-  describe_intro_felipe: [
-    "Felipe describe. El mismo que puede explicar durante 40 minutos por qué su mazo de Magic 'tiene sinergias' ahora tiene 90 segundos. Dios los cría.",
-    "Le toca a Felipe. El hombre que ve dinosaurios en todo intenta describir algo sin decirlo. Esto va a ser un desastre pedagógico.",
-    "Felipe al micrófono. Rezamos por los que tienen que adivinar.",
-    "Felipe describe ahora. Si menciona Magic, Rainbow Six, o dinosaurios en cualquier pista, se descuentan 50 puntos automáticamente.",
-  ],
-  describe_intro_rave: [
-    "Rave describe. El que normalmente prefiere 'desconectarse' ahora tiene que comunicarse activamente. Qué ironía tan bella.",
-    "Le toca a Rave. El más tranquilo del grupo va a intentar ser expresivo. Spoiler: no va a lograrlo.",
-    "Rave al frente. Desde Londres, con señal de WiFi y sin personalidad de sobra.",
-    "Rave describe ahora. El hombre del fútbol y los planes tranquilos va a intentar algo tan disruptivo como hablar.",
-  ],
-  describe_intro_burns: [
-    "Burns describe. El sommelier autodidacta de Bogotá tiene que expresarse sin hablar del Escarabajo. Veamos si puede.",
-    "Le toca a Burns. El hombre que convierte cada conversación en una clase de mecánica vintage ahora tiene que ser creativo.",
-    "Burns al podio. Desde Bogotá, con olor a aceite de motor y pretensiones de sommelier.",
-    "Burns describe ahora. Si la descripción involucra alguna pieza del Escarabajo, se invalida automáticamente.",
-  ],
-  describe_winner: [
-    "Alguien lo adivinó. Contra todo pronóstico, el sistema funcionó.",
-    "Correcto. No esperaba que llegáramos hasta aquí esta noche.",
-    "Lo adivinaron. Evidentemente hay algo de inteligencia aquí, aunque escondida.",
-    "Adivinaron. Felipe va a reclamar que él hubiera adivinado más rápido. No le crean.",
-  ],
-  describe_nobody: [
-    "Nadie adivinó. El grupo lo superó perfectamente: fracasaron en conjunto.",
-    "Sin ganador. La descripción fue mala o la audiencia fue peor. Probablemente las dos.",
-    "Nadie. La comunicación humana tocó fondo esta noche y seguimos cavando.",
-    "Cero adivinanzas. Esto es lo que pasa cuando Felipe describe y Rave no pone atención.",
-  ],
-  draw_intro_felipe: [
-    "Felipe dibuja. El hombre que diseña mazos de Magic ahora tiene que hacer arte visual. La expectativa es baja. La realidad va a ser más baja todavía.",
-    "Felipe con el lápiz. Fan de dinosaurios y Rainbow Six intentando dibujar algo comprensible. Dios nos ampare.",
-    "Le toca dibujar a Felipe. Si dibuja un dinosaurio cuando no es el prompt, se descuentan puntos por narcisismo.",
-    "Felipe dibuja ahora. 90 segundos de caos visual están por comenzar.",
-  ],
-  draw_intro_rave: [
-    "Rave dibuja. Desde Londres llega el arte más desconectado de la historia del juego.",
-    "Le toca a Rave. El que prefiere los planes tranquilos va a hacer algo que nadie va a entender.",
-    "Rave con el pincel virtual. La abstracción británica está por llegar.",
-    "Rave dibuja ahora. Sus compañeros van a adivinar cualquier cosa menos lo correcto.",
-  ],
-  draw_intro_burns: [
-    "Burns dibuja. El Escarabajo del 65 tiene mejor arte en su carrocería oxidada que lo que vamos a ver.",
-    "Le toca a Burns. El sommelier que toma vino en Bogotá ahora hace arte. El nivel cultural sigue bajando.",
-    "Burns con el lápiz digital. Esperamos un dibujo que al menos no parezca instrucciones de ensamblaje de IKEA.",
-    "Burns dibuja ahora. Si alguien adivina lo que dibujó, le duplicamos los puntos porque claramente hizo un milagro.",
-  ],
-  draw_winner: [
-    "Alguien adivinó ese dibujo. Ya sea porque fue bueno o porque el adivinador tiene poderes telepáticos.",
-    "Correcto. El arte comunicó algo. Nadie más esperaba eso esta noche.",
-    "Lo adivinaron. Contra toda evidencia visual, el mensaje llegó.",
-    "Acertaron. O el dibujo fue bueno, o los que adivinaron están desesperados por sumar puntos.",
-  ],
-  draw_nobody: [
-    "Nadie adivinó. El dibujo fue un crimen visual y los espectadores fueron víctimas.",
-    "Cero. El artista fracasó. Los críticos también fracasaron. Arte incomprendido en su máxima expresión.",
-    "Nadie lo adivinó. Lo que vimos fue abstracto en el peor sentido del término.",
-    "Sin ganador. El Louvre agradece no tener que colgar eso en sus paredes.",
-  ],
-  memory_intro: [
-    "Memory Mayhem. El momento donde descubrimos que nadie en esta sala tiene memoria de trabajo funcional.",
-    "Nueve ítems, seis correctos, tres trampas. El grupo que no recuerda qué desayunó ahora tiene que recordar símbolos random.",
-    "Memoria. El juego donde Burns va a elegir cosas basándose en vibes y Felipe va a aplicar 'lógica estratégica'. Los dos van a fallar.",
-    "Aquí se seleccionan los 6 correctos de 9. Simple. Para alguien. Probablemente no para ninguno de los aquí presentes.",
-  ],
-  memory_reveal: [
-    "Y los resultados de memoria están. Alguien definitivamente confundió el tramposo con el real.",
-    "Los números hablan solos. La memoria del grupo es tan confiable como el Escarabajo de Burns en autopista.",
-    "Resultados de memoria. Felipe va a decir que tenía la estrategia correcta pero la ejecutó mal. Mentira.",
-    "Así quedó. La memoria colectiva de este grupo es técnicamente un desastre clínico.",
-  ],
-  boss_intro: [
-    "Final Boss. Todo lo que acumularon esta noche se puede perder o duplicar ahora. No entren en pánico. Bueno, sí entren.",
-    "La pregunta final. 300 puntos si aciertan. 150 menos si fallan. Y con el historial de esta noche, las matemáticas no favorecen a nadie.",
-    "Último round. El momento donde Felipe va a estar 'segurísimo' de la respuesta equivocada.",
-    "Final Boss activado. Burns, esto es lo que pasa cuando uno no estudia historia general por estar arreglando carros viejos.",
-  ],
-  generic: [
-    "Siguiente. El show continúa aunque la dignidad del grupo no.",
-    "Vamos. El tiempo es de todos pero el ridículo es de cada uno.",
-    "Continuamos. El nivel no ha subido pero el entretenimiento sí.",
-    "Adelante. Esta noche ha sido un regalo para mí y un trauma para ustedes.",
-    "Que siga el show. Ya perdí la fe en la humanidad pero gané fe en el espectáculo.",
-  ]
-};
-
-let _lastLineIdx = {};
-function pickHostLine(category, extraContext) {
-  // Try to pick a contextual line based on extraContext keywords
-  let pool = null;
-
-  if (category === 'describe_intro') {
-    if (extraContext?.includes('Felipe')) pool = HOST_LINES.describe_intro_felipe;
-    else if (extraContext?.includes('Rave')) pool = HOST_LINES.describe_intro_rave;
-    else pool = HOST_LINES.describe_intro_burns;
-  } else if (category === 'draw_intro') {
-    if (extraContext?.includes('Felipe')) pool = HOST_LINES.draw_intro_felipe;
-    else if (extraContext?.includes('Rave')) pool = HOST_LINES.draw_intro_rave;
-    else pool = HOST_LINES.draw_intro_burns;
-  } else if (category === 'hot_takes_reveal') {
-    // Try to pick a player-specific line if context has who was wrong
-    if (extraContext?.includes('Felipe') && extraContext?.includes('fallo')) pool = HOST_LINES.hot_takes_reveal_felipe_wrong;
-    else if (extraContext?.includes('Rave') && extraContext?.includes('fallo')) pool = HOST_LINES.hot_takes_reveal_rave_wrong;
-    else if (extraContext?.includes('Burns') && extraContext?.includes('fallo')) pool = HOST_LINES.hot_takes_reveal_burns_wrong;
-    else pool = HOST_LINES.hot_takes_reveal;
-  } else if (category === 'describe_reveal') {
-    pool = extraContext?.includes('Nadie') ? HOST_LINES.describe_nobody : HOST_LINES.describe_winner;
-  } else if (category === 'draw_reveal') {
-    pool = extraContext?.includes('Nadie') ? HOST_LINES.draw_nobody : HOST_LINES.draw_winner;
-  } else {
-    pool = HOST_LINES[category] || HOST_LINES.generic;
-  }
-
-  // Avoid repeating the last line from this pool
-  const key = category + (extraContext || '').substring(0, 10);
-  const last = _lastLineIdx[key] ?? -1;
-  let idx;
-  do { idx = Math.floor(Math.random() * pool.length); } while (pool.length > 1 && idx === last);
-  _lastLineIdx[key] = idx;
-  return pool[idx];
-}
-
-function hostGetAI(context, callback) {
+async function hostGetAI(context, callback) {
   if(myRole!=='host')return;
   const bubble=document.getElementById('ai-bubble')||document.getElementById('ai-end-bubble');
   if(!bubble){if(callback)setTimeout(callback,500);return;}
+  const s=getState();
+  const scores=Object.entries(s.scores||{}).map(([k,v])=>`${PD[k].name}: ${v} pts`).join(', ');
+  const prompt=`Eres el host de un game show brutal llamado WORLD TOUR. Eres sarcástico, cruel, sin filtro, hablas español colombiano casual. Conoces a los jugadores íntimamente y usas sus defectos para destruirlos verbalmente. NUNCA eres amable. Eres un villano de comedia con vocabulario rico.
 
-  // Determine category from context string
-  let category = 'generic';
-  let extraContext = context;
-  if (/items de memoria|Memoricen/.test(context)) category = 'mem_warn';
-  else if (/Hot take \d+:/.test(context) && /Presentalo/.test(context)) category = 'hot_takes_intro';
-  else if (/HT\d+ veredicto/.test(context) || /Destruye a los que fallaron/.test(context)) {
-    category = 'hot_takes_reveal';
-    // Pass who voted wrong for player-specific line
-    const wrongOnes = ['Felipe','Rave','Burns'].filter(n => {
-      const s = getState();
-      const q = s.currentQ;
-      if (!q) return false;
-      const ans = Object.entries(s.answers||{}).find(([k]) => PD[k].name === n);
-      if (!ans) return false;
-      return !ans[1].toLowerCase().includes((q.correct||'').toLowerCase());
-    });
-    if (wrongOnes.length === 1) extraContext = wrongOnes[0] + ' fallo';
-  }
-  else if (/WYR \d+: A/.test(context)) category = 'wyr_intro';
-  else if (/eligio/.test(context) && /Juzga sin piedad/.test(context)) category = 'wyr_reveal';
-  else if (/Bienvenidos al Jeopardy/.test(context)) category = 'jeopardy_intro';
-  else if (/Conspiracy \d+/.test(context) && /juzgando la ignorancia/.test(context)) category = 'conspiracy_intro';
-  else if (/CC\d+/.test(context) && /paranoia/.test(context)) category = 'conspiracy_reveal';
-  else if (/describe algo en secreto/.test(context)) {
-    category = 'describe_intro';
-    const m = context.match(/^(\w+) describe/);
-    extraContext = m ? m[1] : context;
-  }
-  else if (/adivino|Nadie adivino/.test(context) && /habilidades descriptivas/.test(context)) {
-    category = 'describe_reveal';
-    extraContext = /Nadie/.test(context) ? 'Nadie' : 'winner';
-  }
-  else if (/dibuja algo en secreto/.test(context)) {
-    category = 'draw_intro';
-    const m = context.match(/^(\w+) dibuja/);
-    extraContext = m ? m[1] : context;
-  }
-  else if (/adivino|Nadie adivino/.test(context) && /habilidades de adivinanza/.test(context)) {
-    category = 'draw_reveal';
-    extraContext = /Nadie/.test(context) ? 'Nadie' : 'winner';
-  }
-  else if (/ronda de memoria|9 simbolos/.test(context)) category = 'memory_intro';
-  else if (/Memory Mayhem completado/.test(context)) category = 'memory_reveal';
-  else if (/FINAL BOSS|villano definitivo/.test(context)) category = 'boss_intro';
+JUGADORES:
+- Felipe: Juega Magic: The Gathering y cree que es un maestro de estrategia. Fan de dinosaurios, WWII y Rainbow Six Siege. Muy competitivo, odia perder pero lo hace con frecuencia.
+- Rave: Prefiere "planes tranquilos" y "desconectarse". Básicamente huyendo de su propia existencia.
+- Burns: Tiene un Escarabajo del 65 y cree que eso lo hace interesante. Toma vino como sommelier pero vive en Bogotá.
 
-  const line = pickHostLine(category, extraContext);
-  bubble.innerHTML = `<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${line}</div>`;
+PUNTAJE ACTUAL: ${scores}
 
-  if(callback) setTimeout(callback, 2500);
+SITUACIÓN: ${context}
+
+Responde con UN comentario brutal y divertido. Máximo 3 oraciones. Sin comillas. Solo el texto.`;
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${data.content?.[0]?.text||'Sin palabras.'}</div>`;
+  } catch {
+    const _fb=['El host está en el baño. Vuelve en un momento.','Error 404: comentario cruel no encontrado. Improvisen.','El host se quedó sin palabras. Eso dice más de ustedes que cualquier insulto.','Conexión interrumpida. Probablemente culpa de Burns.'];
+    bubble.innerHTML=`<div class="hb-label">🎙️ EL HOST</div><div class="hb-text">${_fb[Math.floor(Math.random()*_fb.length)]}</div>`;
+  }
+  if(callback)setTimeout(callback,2500);
 }
 
 // ═══════════════════════════════════════════
